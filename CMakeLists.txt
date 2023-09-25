@@ -8,5 +8,7 @@ set(SFML_DIR "C:/SFML/lib/cmake/SFML")
 find_package(SFML 2.6.0 COMPONENTS system window graphics audio REQUIRED)
 
 include_directories(C:/SFML/include)
-add_executable(Galaga main.cpp)
+add_executable(Galaga main.cpp
+        Game.cpp
+        Player.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)
