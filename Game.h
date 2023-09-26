@@ -21,11 +21,14 @@ private:
 
     void initWindow();
     void initTextures();
+    void initPlayer();
 public:
     Game();
     ~Game() = default;
 
+    void updateInput();
     void update();
+
     void render();
 
     void run();

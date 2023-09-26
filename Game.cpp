@@ -4,7 +4,7 @@
 #include "Game.h"
 
 void Game::initWindow() {
-    this->window = std::make_unique<sf::RenderWindow>(sf::VideoMode(720, 1080), "Galaga");
+    this->window = std::make_unique<sf::RenderWindow>(sf::VideoMode(720, 720), "Galaga");
 }
 
 void Game::initTextures() {
@@ -21,15 +21,29 @@ void Game::initTextures() {
     }
 }
 
+void Game::initPlayer() {
+    float velocity = 0.1f;
+    this->player = std::make_unique<Player>(this->textureManager["galaga"], *window, velocity);
+}
+
 Game::Game() {
     this->dir_path = std::filesystem::current_path();
     this->initWindow();
     this->initTextures();
-    this->player = std::make_unique<Player>(this->textureManager["galaga"]);
+    this->initPlayer();
+}
+
+void Game::updateInput() {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+        this->player->move(-1.f, 0.f, *window);
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+        this->player->move(1.f, 0.f, *window);
+    }
 }
 
 void Game::update() {
-
+    this->updateInput();
 }
 
 void Game::render() {
