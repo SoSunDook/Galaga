@@ -7,13 +7,16 @@
 #include <SFML/System.hpp>
 #include "Player.h"
 #include <memory>
-
+#include <string>
+#include <filesystem>
+#include <iostream>
 
 class Game {
 private:
+    std::filesystem::path dir_path;
     std::unique_ptr<sf::RenderWindow> window;
     std::unique_ptr<Player> player;
-    std::map<std::string, std::shared_ptr<sf::Texture>> textures;
+    std::map<std::string, std::shared_ptr<sf::Texture>> textureManager;
 //    unsigned numberOfEnemies;
 
     void initWindow();

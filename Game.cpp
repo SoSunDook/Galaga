@@ -2,19 +2,30 @@
 // Created by SoSunDook on 25.09.2023.
 //
 #include "Game.h"
-#include <memory>
 
 void Game::initWindow() {
     this->window = std::make_unique<sf::RenderWindow>(sf::VideoMode(720, 1080), "Galaga");
 }
 
 void Game::initTextures() {
-
+    std::string path(this->dir_path.string());
+    path.append("\\Data\\Textures");
+    for (const auto & entry : std::filesystem::directory_iterator(path)) {
+        auto entryPath = &entry.path();
+        auto fileName = entryPath->stem().string();
+        auto tmpTexture = std::make_shared<sf::Texture>();
+        if (!tmpTexture->loadFromFile(entryPath->string())) {
+            throw std::invalid_argument(fileName + "image can not be loaded");
+        }
+        this->textureManager[fileName] = tmpTexture;
+    }
 }
 
 Game::Game() {
+    this->dir_path = std::filesystem::current_path();
     this->initWindow();
-    this->player = std::make_unique<Player>();
+    this->initTextures();
+    this->player = std::make_unique<Player>(this->textureManager["galaga"]);
 }
 
 void Game::update() {

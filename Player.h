@@ -13,14 +13,14 @@ private:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
 
-    void initTexture();
+    void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
 public:
-    Player();
+    explicit Player(std::shared_ptr<sf::Texture> & managedTexture);
     ~Player() = default;
 
     void update();
-    void render(sf::RenderTarget& target);
+    void render(sf::RenderTarget & target);
 };
 
 

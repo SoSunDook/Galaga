@@ -4,23 +4,16 @@
 
 #include "Player.h"
 
-void Player::initTexture() {
-    sf::Texture texture1;
-    if (!texture1.loadFromFile("Data/Textures/galaga.png")) {
-        throw std::invalid_argument("Galaga image can not be loaded");
-    }
-    this->texture = std::move(std::make_unique<sf::Texture>(texture1));
-//    if (!this->texture->loadFromFile("Data/Textures/galaga.png")) {
-//        throw std::invalid_argument("Galaga image can not be loaded");
-//    }
+void Player::initTexture(std::shared_ptr<sf::Texture> & managedTexture) {
+    this->texture = managedTexture;
 }
 
 void Player::initSprite() {
     this->sprite.setTexture(*this->texture);
 }
 
-Player::Player() {
-    this->initTexture();
+Player::Player(std::shared_ptr<sf::Texture> & managedTexture) {
+    this->initTexture(managedTexture);
     this->initSprite();
 }
 
