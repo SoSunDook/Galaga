@@ -1,6 +1,7 @@
 //
 // Created by SoSunDook on 25.09.2023.
 //
+
 #include "Game.h"
 
 void Game::initWindow() {
@@ -15,15 +16,14 @@ void Game::initTextures() {
         auto fileName = entryPath->stem().string();
         auto tmpTexture = std::make_shared<sf::Texture>();
         if (!tmpTexture->loadFromFile(entryPath->string())) {
-            throw std::invalid_argument(fileName + "image can not be loaded");
+            throw std::invalid_argument(fileName + " image can not be loaded");
         }
         this->textureManager[fileName] = tmpTexture;
     }
 }
 
 void Game::initPlayer() {
-    float velocity = 0.1f;
-    this->player = std::make_unique<Player>(this->textureManager["galaga"], *window, velocity);
+    this->player = std::make_unique<Player>(this->textureManager["galaga"], *window, this->playerVelocity, this->playerShootCooldownMax);
 }
 
 Game::Game() {
@@ -34,21 +34,68 @@ Game::Game() {
 }
 
 void Game::updateInput() {
+    bool left = false;
+    bool right = false;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+        left = true;
         this->player->move(-1.f, 0.f, *window);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+        right = true;
         this->player->move(1.f, 0.f, *window);
     }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
+        auto newBullet = std::make_shared<PlayerBullet>(this->textureManager["bulletPlayer"], this->bulletsScale, this->bulletsVelocity);
+        auto pos_x = this->player->getGlobalBounds().getPosition().x + (this->player->getLocalBounds().getSize().x - (newBullet->getLocalBounds().getSize().x * this->bulletsScale)) / 2;
+        auto pos_y = this->player->getGlobalBounds().getPosition().y - (newBullet->getLocalBounds().getSize().y * this->bulletsScale);
+        newBullet->setPosition(pos_x, pos_y);
+        auto tmp_bvl = -this->bulletsVelocity;
+        if (left) {
+            auto tmp_vel = -this->playerVelocity;
+            newBullet->setDirection(tmp_vel, tmp_bvl);
+        } else if (right) {
+            newBullet->setDirection(this->playerVelocity, tmp_bvl);
+        } else {
+            auto tmp_vel = 0.f;
+            newBullet->setDirection(tmp_vel, tmp_bvl);
+        }
+        this->playerBullets.push_back(newBullet);
+    }
+}
+
+void Game::updateBullets() {
+    for (auto iter = this->playerBullets.begin(); iter != this->playerBullets.end(); ) {
+        iter->get()->update();
+//        Bounds check
+        if ((iter->get()->getGlobalBounds().getPosition().y <= (-(iter->get()->getLocalBounds().getSize().y * this->bulletsScale)))
+        || (iter->get()->getGlobalBounds().getPosition().x <= (-(iter->get()->getLocalBounds().getSize().x * this->bulletsScale)))
+        || (iter->get()->getGlobalBounds().getPosition().x >= static_cast<float>(this->window->getSize().x))) {
+            iter = this->playerBullets.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+}
+
+void Game::updatePlayers() {
+    this->player->update();
 }
 
 void Game::update() {
     this->updateInput();
+    this->updateBullets();
+    this->updatePlayers();
 }
 
 void Game::render() {
     this->window->clear();
+
     this->player->render(*window);
+
+    for (auto & playerBullet : this->playerBullets) {
+        playerBullet->render(*window);
+    }
+
     this->window->display();
 }
 

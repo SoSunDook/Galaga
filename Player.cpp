@@ -15,8 +15,10 @@ void Player::initSprite(sf::RenderTarget & target) {
     this->sprite.setPosition(startPosX, startPosY);
 }
 
-Player::Player(std::shared_ptr<sf::Texture> & managedTexture, sf::RenderTarget & target, float & velocity) {
+Player::Player(std::shared_ptr<sf::Texture> & managedTexture, sf::RenderTarget & target, float & velocity, float & playerShootCooldownMax) {
     this->velocity = velocity;
+    this->playerShootCooldownMax = playerShootCooldownMax;
+    this->playerShootCooldown = playerShootCooldownMax;
     this->initTexture(managedTexture);
     this->initSprite(target);
 }
@@ -34,4 +36,30 @@ void Player::move(const float x, const float y, sf::RenderTarget & target) {
     if ((currentLocX + new_x < rightBorder) && (currentLocX + new_x > leftBorder)) {
         this->sprite.move(new_x, new_y);
     }
+}
+
+void Player::updateAttack() {
+    if (this->playerShootCooldown < this->playerShootCooldownMax) {
+        this->playerShootCooldown += 0.1f;
+    }
+}
+
+void Player::update() {
+    this->updateAttack();
+}
+
+bool Player::canAttack() {
+    if (this->playerShootCooldown >= this->playerShootCooldownMax) {
+        this->playerShootCooldown = 0.f;
+        return true;
+    }
+    return false;
+}
+
+sf::FloatRect Player::getGlobalBounds() {
+    return this->sprite.getGlobalBounds();
+}
+
+sf::FloatRect Player::getLocalBounds() {
+    return this->sprite.getLocalBounds();
 }

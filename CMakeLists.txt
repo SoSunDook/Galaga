@@ -10,5 +10,7 @@ find_package(SFML 2.6.0 COMPONENTS system window graphics audio REQUIRED)
 include_directories(C:/SFML/include)
 add_executable(Galaga main.cpp
         Game.cpp
-        Player.cpp)
+        Player.cpp
+        Bullet.cpp
+        PlayerBullet.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)
