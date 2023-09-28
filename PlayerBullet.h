@@ -8,7 +8,7 @@
 
 class PlayerBullet : public Bullet {
 public:
-    PlayerBullet(std::shared_ptr<sf::Texture> & managedTexture, float & spriteScale, float & velocity);
+    explicit PlayerBullet(std::shared_ptr<sf::Texture> & managedTexture, float & spriteScale, float & velocity);
     ~PlayerBullet() = default;
 };
 

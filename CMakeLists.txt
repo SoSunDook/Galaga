@@ -12,5 +12,9 @@ add_executable(Galaga main.cpp
         Game.cpp
         Player.cpp
         Bullet.cpp
-        PlayerBullet.cpp)
+        PlayerBullet.cpp
+        Enemy.cpp
+        Goei.cpp
+        Zako.cpp
+        Boss.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)

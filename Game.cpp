@@ -26,11 +26,30 @@ void Game::initPlayer() {
     this->player = std::make_unique<Player>(this->textureManager["galaga"], *window, this->playerVelocity, this->playerShootCooldownMax);
 }
 
+std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
+    auto newBullet = std::make_shared<PlayerBullet>(this->textureManager["bulletPlayer"], this->bulletsScale, this->bulletsVelocity);
+    auto pos_x = this->player->getGlobalBounds().getPosition().x + (this->player->getLocalBounds().getSize().x - (newBullet->getLocalBounds().getSize().x * this->bulletsScale)) / 2;
+    auto pos_y = this->player->getGlobalBounds().getPosition().y - (newBullet->getLocalBounds().getSize().y * this->bulletsScale);
+    newBullet->setPosition(pos_x, pos_y);
+    return newBullet;
+}
+
+void Game::initEnemies() {
+    for (int i = 0; i < 5; ++i) {
+        auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyShootCooldownMax);
+        float x = 100.f + static_cast<float>(i) * 100;
+        float y = 0.f;
+        new_enemy->setPosition(x, y);
+        this->enemies.push_back(new_enemy);
+    }
+}
+
 Game::Game() {
     this->dir_path = std::filesystem::current_path();
     this->initWindow();
     this->initTextures();
     this->initPlayer();
+    this->initEnemies();
 }
 
 void Game::updateInput() {
@@ -45,10 +64,7 @@ void Game::updateInput() {
         this->player->move(1.f, 0.f, *window);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
-        auto newBullet = std::make_shared<PlayerBullet>(this->textureManager["bulletPlayer"], this->bulletsScale, this->bulletsVelocity);
-        auto pos_x = this->player->getGlobalBounds().getPosition().x + (this->player->getLocalBounds().getSize().x - (newBullet->getLocalBounds().getSize().x * this->bulletsScale)) / 2;
-        auto pos_y = this->player->getGlobalBounds().getPosition().y - (newBullet->getLocalBounds().getSize().y * this->bulletsScale);
-        newBullet->setPosition(pos_x, pos_y);
+        auto newBullet = this->initNewPlBullet();
         auto tmp_bvl = -this->bulletsVelocity;
         if (left) {
             auto tmp_vel = -this->playerVelocity;
@@ -81,10 +97,36 @@ void Game::updatePlayers() {
     this->player->update();
 }
 
+void Game::updateEnemies() {
+    for (auto & enemy : this->enemies) {
+        enemy->update();
+    }
+}
+
+void Game::updateCombat() {
+    for (auto enemy_iter = this->enemies.begin(); enemy_iter != this->enemies.end(); ) {
+        bool enemy_deleted = false;
+        for (auto pl_bullet_iter = this->playerBullets.begin(); (pl_bullet_iter != this->playerBullets.end()) && (!enemy_deleted); ) {
+            if (enemy_iter->get()->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
+                enemy_iter = this->enemies.erase(enemy_iter);
+                pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
+                enemy_deleted = true;
+            } else {
+                ++pl_bullet_iter;
+            }
+        }
+        if (!enemy_deleted) {
+            ++enemy_iter;
+        }
+    }
+}
+
 void Game::update() {
     this->updateInput();
-    this->updateBullets();
     this->updatePlayers();
+    this->updateBullets();
+    this->updateEnemies();
+    this->updateCombat();
 }
 
 void Game::render() {
@@ -94,6 +136,10 @@ void Game::render() {
 
     for (auto & playerBullet : this->playerBullets) {
         playerBullet->render(*window);
+    }
+
+    for (auto & enemy : this->enemies) {
+        enemy->render(*window);
     }
 
     this->window->display();

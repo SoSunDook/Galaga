@@ -8,6 +8,8 @@
 #include <SFML/System.hpp>
 #include "Player.h"
 #include "PlayerBullet.h"
+#include "Enemy.h"
+#include "Zako.h"
 #include <memory>
 #include <string>
 #include <filesystem>
@@ -22,10 +24,15 @@ private:
     std::unique_ptr<Player> player;
     std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
 
+    std::vector<std::shared_ptr<Enemy>> enemies;
+//    std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
+
     float playerVelocity = 0.1f;
     float bulletsVelocity = 0.3f;
+    float enemyVelocity = 0.2f;
 
     float playerShootCooldownMax = 220.f;
+    float enemyShootCooldownMax = 220.f;
 
     float bulletsScale = 3.f;
 
@@ -34,6 +41,8 @@ private:
     void initWindow();
     void initTextures();
     void initPlayer();
+    std::shared_ptr<PlayerBullet> initNewPlBullet();
+    void initEnemies();
 public:
     Game();
     ~Game() = default;
@@ -41,6 +50,8 @@ public:
     void updateInput();
     void updateBullets();
     void updatePlayers();
+    void updateEnemies();
+    void updateCombat();
     void update();
 
     void render();
