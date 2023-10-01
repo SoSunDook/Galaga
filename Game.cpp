@@ -22,6 +22,19 @@ void Game::initTextures() {
     }
 }
 
+void Game::initPaths() {
+    auto new_path = std::make_shared<BezierPath>();
+    sf::Vector2<float> p0(100, 0);
+    sf::Vector2<float> p1(650, 0);
+    sf::Vector2<float> p2(650, 500);
+    sf::Vector2<float> p3(100, 500);
+    auto new_curve = BezierCurve(p0, p1, p2, p3);
+    int a = 12;
+    new_path->addCurve(new_curve, a);
+    new_path->makePath();
+    pathManager["zakoDefault"] = new_path;
+}
+
 void Game::initPlayer() {
     this->player = std::make_unique<Player>(this->textureManager["galaga"], *window, this->playerVelocity, this->playerShootCooldownMax);
 }
@@ -35,19 +48,18 @@ std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
 }
 
 void Game::initEnemies() {
-    for (int i = 0; i < 5; ++i) {
-        auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyShootCooldownMax);
-        float x = 100.f + static_cast<float>(i) * 100;
-        float y = 0.f;
-        new_enemy->setPosition(x, y);
-        this->enemies.push_back(new_enemy);
-    }
+    auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyShootCooldownMax, this->enemiesScale);
+    auto tmp = pathManager["zakoDefault"];
+    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
+    new_enemy->setPath(tmp);
+    this->enemies.push_back(new_enemy);
 }
 
 Game::Game() {
     this->dir_path = std::filesystem::current_path();
     this->initWindow();
     this->initTextures();
+    this->initPaths();
     this->initPlayer();
     this->initEnemies();
 }

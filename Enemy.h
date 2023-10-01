@@ -7,11 +7,18 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <memory>
+#include <valarray>
+#include "BezierPath.h"
 
 class Enemy {
 protected:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
+    int spriteDivisor = 2;
+    float spriteScale{};
+
+    std::shared_ptr<BezierPath> currentPath;
+    unsigned currentPoint;
 
     float velocity{};
 
@@ -38,6 +45,8 @@ public:
     bool canAttack();
 
     void setPosition(float & x, float & y);
+
+    void setPath(std::shared_ptr<BezierPath> & path);
 
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();

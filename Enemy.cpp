@@ -10,6 +10,13 @@ void Enemy::initTexture(std::shared_ptr<sf::Texture> & managedTexture) {
 
 void Enemy::initSprite() {
     this->sprite.setTexture(*this->texture);
+    this->sprite.setScale(this->spriteScale, this->spriteScale);
+//    Animation startup
+    auto size = this->texture->getSize();
+    sf::Vector2<int> point(size.x / this->spriteDivisor, 0);
+    sf::Vector2<int> vector(size.x / this->spriteDivisor, size.y);
+    const sf::Rect<int> rectangle(point, vector);
+    this->sprite.setTextureRect(rectangle);
 }
 
 void Enemy::render(sf::RenderTarget & target) {
@@ -17,7 +24,17 @@ void Enemy::render(sf::RenderTarget & target) {
 }
 
 void Enemy::move() {
-
+    sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) - this->sprite.getPosition();
+    float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    if (distance < this->velocity) {
+        this->currentPoint++;
+        if (this->currentPoint >= this->currentPath->getPath().size()) {
+            this->currentPoint = 0;
+        }
+    } else {
+        sf::Vector2f step = (direction / distance) * this->velocity;
+        this->sprite.move(step);
+    }
 }
 
 void Enemy::updateAttack() {
@@ -41,6 +58,11 @@ bool Enemy::canAttack() {
 
 void Enemy::setPosition(float & x, float & y) {
     this->sprite.setPosition(x, y);
+}
+
+void Enemy::setPath(std::shared_ptr<BezierPath> & path) {
+    this->currentPath = path;
+    this->currentPoint = 0;
 }
 
 sf::FloatRect Enemy::getGlobalBounds() {

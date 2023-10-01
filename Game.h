@@ -10,6 +10,7 @@
 #include "PlayerBullet.h"
 #include "Enemy.h"
 #include "Zako.h"
+#include "BezierPath.h"
 #include <memory>
 #include <string>
 #include <filesystem>
@@ -26,20 +27,23 @@ private:
 
     std::vector<std::shared_ptr<Enemy>> enemies;
 //    std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
+    std::map<std::string, std::shared_ptr<BezierPath>> pathManager;
 
     float playerVelocity = 0.1f;
     float bulletsVelocity = 0.3f;
-    float enemyVelocity = 0.2f;
+    float enemyVelocity = 0.08f;
 
     float playerShootCooldownMax = 220.f;
     float enemyShootCooldownMax = 220.f;
 
     float bulletsScale = 3.f;
+    float enemiesScale = 3.f;
 
 //  unsigned numberOfEnemies;
 
     void initWindow();
     void initTextures();
+    void initPaths();
     void initPlayer();
     std::shared_ptr<PlayerBullet> initNewPlBullet();
     void initEnemies();

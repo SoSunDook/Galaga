@@ -16,5 +16,7 @@ add_executable(Galaga main.cpp
         Enemy.cpp
         Goei.cpp
         Zako.cpp
-        Boss.cpp)
+        Boss.cpp
+        BezierCurve.cpp
+        BezierPath.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)

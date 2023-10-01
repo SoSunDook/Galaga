@@ -8,7 +8,7 @@
 
 class Zako : public Enemy {
 public:
-    explicit Zako(std::shared_ptr<sf::Texture> & managedTexture, float & velocity, float & enemyShootCooldownMax);
+    explicit Zako(std::shared_ptr<sf::Texture> & managedTexture, float & velocity, float & enemyShootCooldownMax, float & spriteScale);
     ~Zako() = default;
 };
 
