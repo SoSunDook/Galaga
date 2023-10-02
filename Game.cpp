@@ -29,7 +29,7 @@ void Game::initPaths() {
     sf::Vector2<float> p2(650, 500);
     sf::Vector2<float> p3(100, 500);
     auto new_curve = BezierCurve(p0, p1, p2, p3);
-    int a = 12;
+    int a = 60;
     new_path->addCurve(new_curve, a);
     new_path->makePath();
     pathManager["zakoDefault"] = new_path;

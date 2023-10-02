@@ -4,6 +4,8 @@
 
 #include "Enemy.h"
 
+#include <cmath>
+
 void Enemy::initTexture(std::shared_ptr<sf::Texture> & managedTexture) {
     this->texture = managedTexture;
 }
@@ -25,6 +27,7 @@ void Enemy::render(sf::RenderTarget & target) {
 
 void Enemy::move() {
     sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) - this->sprite.getPosition();
+    this->updateRotation(direction.x, direction.y);
     float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
     if (distance < this->velocity) {
         this->currentPoint++;
@@ -41,6 +44,11 @@ void Enemy::updateAttack() {
     if (this->enemyShootCooldown < this->enemyShootCooldownMax) {
         this->enemyShootCooldown += 0.1f;
     }
+}
+
+void Enemy::updateRotation(float & x, float & y) {
+    auto angle = (static_cast<float>(std::atan2(y,x)) * 180.f / static_cast<float>(M_PI)) + 90;
+    this->sprite.setRotation(angle);
 }
 
 void Enemy::update() {

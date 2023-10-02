@@ -35,6 +35,7 @@ public:
     Enemy() = default;
     ~Enemy() = default;
 
+    void updateRotation(float & x, float & y);
     void updateAttack();
     void update();
 
