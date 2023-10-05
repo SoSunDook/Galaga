@@ -9,16 +9,23 @@
 #include <memory>
 #include <valarray>
 #include "BezierPath.h"
+#include "DynamicBezierPath.h"
 
 class Enemy {
 protected:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
+
+    sf::Clock moveClock{};
+    sf::Clock shootClock{};
+
     int spriteDivisor = 2;
     float spriteScale{};
 
     std::shared_ptr<BezierPath> currentPath;
     unsigned currentPoint;
+
+    std::shared_ptr<DynamicBezierPath> dynamicPath;
 
     float velocity{};
 
@@ -26,8 +33,7 @@ protected:
 
     int worthPoints{};
 
-    float enemyShootCooldown{};
-    float enemyShootCooldownMax{};
+    sf::Time enemyShootCooldown{};
 
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
@@ -48,6 +54,8 @@ public:
     void setPosition(float & x, float & y);
 
     void setPath(std::shared_ptr<BezierPath> & path);
+
+    void initDynamicPath();
 
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();

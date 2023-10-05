@@ -21,6 +21,7 @@ private:
     std::filesystem::path dir_path;
     std::map<std::string, std::shared_ptr<sf::Texture>> textureManager;
     std::unique_ptr<sf::RenderWindow> window;
+    std::unique_ptr<sf::Clock> clock;
 
     std::unique_ptr<Player> player;
     std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
@@ -29,18 +30,18 @@ private:
 //    std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
     std::map<std::string, std::shared_ptr<BezierPath>> pathManager;
 
-    float playerVelocity = 0.1f;
-    float bulletsVelocity = 0.3f;
-    float enemyVelocity = 0.08f;
+    float playerVelocity;
+    float bulletsVelocity;
+    float enemyVelocity;
 
-    float playerShootCooldownMax = 220.f;
-    float enemyShootCooldownMax = 220.f;
+    sf::Time playerShootCooldown;
+    sf::Time enemyShootCooldown;
 
-    float bulletsScale = 3.f;
-    float enemiesScale = 3.f;
+    float bulletsScale;
+    float enemiesScale;
 
 //  unsigned numberOfEnemies;
-
+    void initConstants();
     void initWindow();
     void initTextures();
     void initPaths();

@@ -15,10 +15,9 @@ void Player::initSprite(sf::RenderTarget & target) {
     this->sprite.setPosition(startPosX, startPosY);
 }
 
-Player::Player(std::shared_ptr<sf::Texture> & managedTexture, sf::RenderTarget & target, float & velocity, float & playerShootCooldownMax) {
+Player::Player(std::shared_ptr<sf::Texture> & managedTexture, sf::RenderTarget & target, float & velocity, sf::Time & playerShootCooldown) {
     this->velocity = velocity;
-    this->playerShootCooldownMax = playerShootCooldownMax;
-    this->playerShootCooldown = playerShootCooldownMax;
+    this->playerShootCooldown = playerShootCooldown;
     this->initTexture(managedTexture);
     this->initSprite(target);
 }
@@ -38,19 +37,13 @@ void Player::move(const float x, const float y, sf::RenderTarget & target) {
     }
 }
 
-void Player::updateAttack() {
-    if (this->playerShootCooldown < this->playerShootCooldownMax) {
-        this->playerShootCooldown += 0.1f;
-    }
-}
-
 void Player::update() {
-    this->updateAttack();
+
 }
 
 bool Player::canAttack() {
-    if (this->playerShootCooldown >= this->playerShootCooldownMax) {
-        this->playerShootCooldown = 0.f;
+    if (this->clock.getElapsedTime() > this->playerShootCooldown) {
+        this->clock.restart();
         return true;
     }
     return false;

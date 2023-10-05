@@ -4,7 +4,7 @@
 
 #include "BezierCurve.h"
 
-BezierCurve::BezierCurve(sf::Vector2<float> & p0, sf::Vector2<float> & p1, sf::Vector2<float> & p2, sf::Vector2<float> & p3) {
+BezierCurve::BezierCurve(sf::Vector2<float> p0, sf::Vector2<float> p1, sf::Vector2<float> p2, sf::Vector2<float> p3) {
     this->p0 = p0;
     this->p1 = p1;
     this->p2 = p2;

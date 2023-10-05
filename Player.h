@@ -12,19 +12,18 @@ class Player {
 private:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
+    sf::Clock clock;
+
+    sf::Time playerShootCooldown;
 
     float velocity;
-
-    float playerShootCooldown;
-    float playerShootCooldownMax;
 
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite(sf::RenderTarget & target);
 public:
-    explicit Player(std::shared_ptr<sf::Texture> & managedTexture, sf::RenderTarget & target, float & velocity, float & playerShootCooldownMax);
+    explicit Player(std::shared_ptr<sf::Texture> & managedTexture, sf::RenderTarget & target, float & velocity, sf::Time & playerShootCooldown);
     ~Player() = default;
 
-    void updateAttack();
     void update();
 
     void render(sf::RenderTarget & target);

@@ -4,8 +4,21 @@
 
 #include "Game.h"
 
+void Game::initConstants() {
+    this->playerVelocity = 1.f;
+    this->bulletsVelocity = 1.f;
+    this->enemyVelocity = 0.6f;
+
+    this->playerShootCooldown = sf::milliseconds(350);
+    this->enemyShootCooldown = sf::milliseconds(350);
+
+    this->bulletsScale = 3.f;
+    this->enemiesScale = 3.f;
+}
+
 void Game::initWindow() {
     this->window = std::make_unique<sf::RenderWindow>(sf::VideoMode(720, 720), "Galaga");
+    this->window->setFramerateLimit(600);
 }
 
 void Game::initTextures() {
@@ -24,10 +37,10 @@ void Game::initTextures() {
 
 void Game::initPaths() {
     auto new_path = std::make_shared<BezierPath>();
-    sf::Vector2<float> p0(100, 0);
-    sf::Vector2<float> p1(650, 0);
-    sf::Vector2<float> p2(650, 500);
-    sf::Vector2<float> p3(100, 500);
+    sf::Vector2<float> p0(720, 720);
+    sf::Vector2<float> p3(0, 0);
+    sf::Vector2<float> p1(720, 0);
+    sf::Vector2<float> p2(0, 720);
     auto new_curve = BezierCurve(p0, p1, p2, p3);
     int a = 60;
     new_path->addCurve(new_curve, a);
@@ -36,7 +49,7 @@ void Game::initPaths() {
 }
 
 void Game::initPlayer() {
-    this->player = std::make_unique<Player>(this->textureManager["galaga"], *window, this->playerVelocity, this->playerShootCooldownMax);
+    this->player = std::make_unique<Player>(this->textureManager["galaga"], *window, this->playerVelocity, this->playerShootCooldown);
 }
 
 std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
@@ -48,15 +61,19 @@ std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
 }
 
 void Game::initEnemies() {
-    auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyShootCooldownMax, this->enemiesScale);
-    auto tmp = pathManager["zakoDefault"];
-    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
-    new_enemy->setPath(tmp);
+    auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyShootCooldown, this->enemiesScale);
+//    auto tmp = pathManager["zakoDefault"];
+//    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
+//    new_enemy->setPath(tmp);
+    float x = 620.f;
+    float y = 620.f;
+    new_enemy->setPosition(x, y);
     this->enemies.push_back(new_enemy);
 }
 
 Game::Game() {
     this->dir_path = std::filesystem::current_path();
+    this->initConstants();
     this->initWindow();
     this->initTextures();
     this->initPaths();

@@ -13,7 +13,8 @@ public:
     sf::Vector2<float> p2;
     sf::Vector2<float> p3;
 
-    explicit BezierCurve(sf::Vector2<float> & p0, sf::Vector2<float> & p1, sf::Vector2<float> & p2, sf::Vector2<float> & p3);
+    BezierCurve() = default;
+    explicit BezierCurve(sf::Vector2<float> p0, sf::Vector2<float> p1, sf::Vector2<float> p2, sf::Vector2<float> p3);
     ~BezierCurve() = default;
 
     sf::Vector2<float> calculateCurvePoint(float t);
