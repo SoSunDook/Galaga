@@ -12,8 +12,6 @@ private:
     unsigned fullSample;
     unsigned currentSample;
 
-    bool swap;
-
     float delta;
 
     float t;
@@ -35,10 +33,7 @@ public:
     unsigned & getFullSample();
     unsigned & getCurrentSample();
 
-    bool & getSwap();
-
     void updateDelta();
-    void updateSwap();
 
     void setOldCurve(BezierCurve newCurve);
 

@@ -50,81 +50,28 @@ void Enemy::move() {
 
 //---    Working with dynamic path
     this->dynamicPath->setOrigin(this->dynamicPath->getOrigin().x + (rand() % 5 - 2), 0.f);
-//    sf::Vector2f direction = this->dynamicPath->getOldPoint() - this->sprite.getPosition();
-//    this->updateRotation(direction.x, direction.y);
-//    float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-//    float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
-//
-//    if (distance <= movement) {
-//        auto tmp_en = this->sprite.getPosition();
-//        auto tmp_dp = this->dynamicPath->getOrigin();
-//
-//        sf::Vector2<float> p1(tmp_en.x, tmp_dp.y);
-//        sf::Vector2<float> p2(tmp_dp.x, tmp_en.y);
-//
-//        BezierCurve curve(tmp_en, p1, p2, tmp_dp);
-//
-//        sf::Vector2<float> newPoint;
-//        if (this->dynamicPath->calculateNewPoint(curve, newPoint)) {
-//            this->dynamicPath->setOldPoint(newPoint);
-//        }
-//    } else {
-//        this->sprite.move((direction / distance) * movement);
-//    }
-//---
 
     sf::Vector2f direction = this->dynamicPath->getOldPoint() - this->sprite.getPosition();
-    this->updateRotation(direction.x, direction.y);
+    this->setWantedRotation(direction.x, direction.y);
     float distanceNormalize = std::sqrt(direction.x * direction.x + direction.y * direction.y);
     float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
 
     if (distanceNormalize <= movement) {
 
-        auto directionToOrigin= this->sprite.getPosition() - this->dynamicPath->getOrigin();
-        float distanceToOrigin = std::sqrt(directionToOrigin.x * directionToOrigin.x + directionToOrigin.y * directionToOrigin.y);
+//        auto directionToOrigin= this->sprite.getPosition() - this->dynamicPath->getOrigin();
+//        float distanceToOrigin = std::sqrt(directionToOrigin.x * directionToOrigin.x + directionToOrigin.y * directionToOrigin.y);
 
-        auto tmpDist = distanceToOrigin / this->dynamicPath->getDistance();
-        if (tmpDist > 0.05f) {
-            if (this->dynamicPath->getCurrentSample() == static_cast<unsigned>(std::ceil(static_cast<int>(this->dynamicPath->getFullSample()) / 2.))) {
-                auto tmp_en = this->sprite.getPosition();
-                auto tmp_dp = this->dynamicPath->getOrigin();
+//        auto tmpDist = distanceToOrigin / this->dynamicPath->getDistance();
+//        if (tmpDist > 0.05f) {
 
-                sf::Vector2<float> p1;
-                sf::Vector2<float> p2;
+        if (this->dynamicPath->getCurrentSample() == static_cast<unsigned>(std::ceil(static_cast<int>(this->dynamicPath->getFullSample()) / 2.))) {
+            auto tmp_en = this->sprite.getPosition();
+            auto tmp_dp = this->dynamicPath->getOrigin();
 
-//                if (tmpDist > 0.15f) {
-//                    if (this->dynamicPath->getSwap()) {
-//                        p1 = {tmp_en.x, tmp_dp.y};
-//                        p2 = {tmp_dp.x, tmp_en.y};
-//                    } else {
-//                        p1 = {tmp_dp.x, tmp_en.y};
-//                        p2 = {tmp_en.x, tmp_dp.y};
-//                    }
-//                } else {
-////                    p1 = {tmp_dp.x, tmp_en.y};
-////                    p2 = tmp_dp;
-//                    if (this->dynamicPath->getSwap()) {
-//                        p1 = tmp_dp;
-//                        p2 = {tmp_dp.x, tmp_en.y};
-//                    } else {
-//                        p1 = {tmp_dp.x, tmp_en.y};
-//                        p2 = tmp_dp;
-//                    }
-//                }
-
-//                p1 = {tmp_dp.x, tmp_en.y};
-//                p2 = tmp_dp;
-
-                p1 = tmp_en;
-                p2 = tmp_dp;
-
-                this->dynamicPath->updateSwap();
-
-                BezierCurve curve(tmp_en, p1, p2, tmp_dp);
-                this->dynamicPath->setOldCurve(curve);
-                this->dynamicPath->setFullSample(this->dynamicPath->getCurrentSample());
-                this->dynamicPath->updateDelta();
-            }
+            BezierCurve curve(tmp_en, tmp_en, tmp_dp, tmp_dp);
+            this->dynamicPath->setOldCurve(curve);
+            this->dynamicPath->setFullSample(this->dynamicPath->getCurrentSample());
+            this->dynamicPath->updateDelta();
         }
 
         sf::Vector2<float> newPoint;
@@ -135,20 +82,49 @@ void Enemy::move() {
     } else {
         this->sprite.move((direction / distanceNormalize) * movement);
     }
+//---
 }
 
 void Enemy::updateAttack() {
 
 }
 
-void Enemy::updateRotation(float & x, float & y) {
-    auto angle = (static_cast<float>(std::atan2(y,x)) * 180.f / static_cast<float>(M_PI)) + 90;
-    this->sprite.setRotation(angle);
+void Enemy::updateRotation() {
+    float rotationDifference = this->wantedRotation - this->sprite.getRotation();
+
+    float maxRotation = this->rotationVelocity * static_cast<float>(rotationClock.restart().asSeconds());
+
+    float angleToRotate;
+
+    if (this->wantedRotation >= this->sprite.getRotation()) {
+        if ((rotationDifference > 0 ? rotationDifference : -rotationDifference) <= (360 - (rotationDifference > 0 ? rotationDifference : -rotationDifference))) {
+            angleToRotate = rotationDifference;
+        } else {
+            angleToRotate = rotationDifference - 360;
+        }
+    } else {
+        if ((rotationDifference > 0 ? rotationDifference : -rotationDifference) <= (360 - (rotationDifference > 0 ? rotationDifference : -rotationDifference))) {
+            angleToRotate = rotationDifference;
+        } else {
+            angleToRotate = rotationDifference + 360;
+        }
+    }
+
+    angleToRotate = static_cast<float>(std::fmod(angleToRotate, 360.0));
+
+    float angleToRotateEpsilon = angleToRotate * static_cast<float>(M_PI) / 180.f;
+
+    if ((angleToRotateEpsilon > 0 ? angleToRotateEpsilon : -angleToRotateEpsilon) <= maxRotation) {
+        this->sprite.rotate(angleToRotate);
+    } else {
+        this->sprite.rotate(static_cast<float>(angleToRotate > 0 ? 1 : -1) * maxRotation * 180.f / static_cast<float>(M_PI));
+    }
 }
 
 void Enemy::update() {
     this->updateAttack();
     this->move();
+    this->updateRotation();
 }
 
 bool Enemy::canAttack() {
@@ -157,6 +133,19 @@ bool Enemy::canAttack() {
         return true;
     }
     return false;
+}
+
+void Enemy::setWantedRotation(float & x, float & y) {
+    auto angle = static_cast<float>(std::atan2(-y, x)) * 180.f / static_cast<float>(M_PI);
+    if (angle < 0) {
+        angle += 360;
+    }
+    angle -= 90;
+    angle = 360 - angle;
+    if (angle > 360) {
+        angle -= 360;
+    }
+    this->wantedRotation = angle;
 }
 
 void Enemy::setPosition(float & x, float & y) {

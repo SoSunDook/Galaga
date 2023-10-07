@@ -9,7 +9,6 @@
 DynamicBezierPath::DynamicBezierPath(unsigned sample, float originPosX, float originPosY, float startPosX, float startPosY) {
     this->fullSample = sample;
     this->currentSample = this->fullSample;
-    this->swap = false;
     this->delta = 1.f / static_cast<float>(this->fullSample);
     this->t = 0.f;
     this->origin.x = originPosX;
@@ -17,10 +16,6 @@ DynamicBezierPath::DynamicBezierPath(unsigned sample, float originPosX, float or
     this->oldPoint = {startPosX, startPosY};
     auto direction = this->origin - this->oldPoint;
     this->distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-//    sf::Vector2<float> p1(this->oldPoint.x, this->origin.y);
-//    sf::Vector2<float> p2(this->origin.x, this->oldPoint.y);
-//    sf::Vector2<float> p1 = {this->origin.x, this->oldPoint.y};
-//    sf::Vector2<float> p2 = this->origin;
     sf::Vector2<float> p1 = this->oldPoint;
     sf::Vector2<float> p2 = this->origin;
     this->oldCurve = BezierCurve(this->oldPoint, p1, p2, origin);
@@ -45,14 +40,6 @@ unsigned & DynamicBezierPath::getCurrentSample() {
 void DynamicBezierPath::updateDelta() {
     this->delta = 1.f / static_cast<float>(this->fullSample);
     this->t = 0.f;
-}
-
-void DynamicBezierPath::updateSwap() {
-    this->swap = !this->swap;
-}
-
-bool & DynamicBezierPath::getSwap() {
-    return this->swap;
 }
 
 void DynamicBezierPath::setOldCurve(BezierCurve newCurve) {

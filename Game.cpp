@@ -8,6 +8,7 @@ void Game::initConstants() {
     this->playerVelocity = 1.f;
     this->bulletsVelocity = 1.f;
     this->enemyVelocity = 0.6f;
+    this->enemyRotationVelocity = 3.f;
 
     this->playerShootCooldown = sf::milliseconds(350);
     this->enemyShootCooldown = sf::milliseconds(350);
@@ -61,7 +62,7 @@ std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
 }
 
 void Game::initEnemies() {
-    auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyShootCooldown, this->enemiesScale);
+    auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale);
 //    auto tmp = pathManager["zakoDefault"];
 //    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
 //    new_enemy->setPath(tmp);

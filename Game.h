@@ -33,6 +33,7 @@ private:
     float playerVelocity;
     float bulletsVelocity;
     float enemyVelocity;
+    float enemyRotationVelocity;
 
     sf::Time playerShootCooldown;
     sf::Time enemyShootCooldown;

@@ -18,6 +18,7 @@ protected:
 
     sf::Clock moveClock{};
     sf::Clock shootClock{};
+    sf::Clock rotationClock{};
 
     int spriteDivisor = 2;
     float spriteScale{};
@@ -28,6 +29,9 @@ protected:
     std::shared_ptr<DynamicBezierPath> dynamicPath;
 
     float velocity{};
+    float rotationVelocity{};
+
+    float wantedRotation{};
 
     int healthPoints{};
 
@@ -41,7 +45,7 @@ public:
     Enemy() = default;
     ~Enemy() = default;
 
-    void updateRotation(float & x, float & y);
+    void updateRotation();
     void updateAttack();
     void update();
 
@@ -50,6 +54,8 @@ public:
     void move();
 
     bool canAttack();
+
+    void setWantedRotation(float & x, float & y);
 
     void setPosition(float & x, float & y);
 
