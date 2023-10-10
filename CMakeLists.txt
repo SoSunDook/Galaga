@@ -19,5 +19,6 @@ add_executable(Galaga main.cpp
         Boss.cpp
         BezierCurve.cpp
         BezierPath.cpp
-        DynamicBezierPath.cpp)
+        DynamicBezierPath.cpp
+        Formation.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)

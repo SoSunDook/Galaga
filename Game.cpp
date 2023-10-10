@@ -15,6 +15,14 @@ void Game::initConstants() {
 
     this->bulletsScale = 3.f;
     this->enemiesScale = 3.f;
+
+    this->maxCountZako = 20;
+    this->maxCountGoei = 16;
+    this->maxCountBoss = 4;
+
+    this->currentCountZako = {};
+    this->currentCountGoei = {};
+    this->currentCountBoss = {};
 }
 
 void Game::initWindow() {
@@ -34,6 +42,10 @@ void Game::initTextures() {
         }
         this->textureManager[fileName] = tmpTexture;
     }
+}
+
+void Game::initFormation() {
+    this->formation = std::make_shared<Formation>();
 }
 
 void Game::initPaths() {
@@ -97,27 +109,45 @@ std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
 }
 
 void Game::initEnemies() {
-    auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale);
-    auto tmp = pathManager["flyInHook"];
-    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
-    float rotation = 180;
-    new_enemy->setRotation(rotation);
-    new_enemy->setPath(tmp);
-    this->enemies.push_back(new_enemy);
+    for (int i = 0; i < this->maxCountZako; ++i) {
+        auto new_enemy = std::make_shared<Zako>(this->formation, this->textureManager["zako"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, i);
+        auto tmp = pathManager["flyInHook"];
+        new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
+        float rotation = 180;
+        new_enemy->setRotation(rotation);
+        new_enemy->setPath(tmp);
+        this->enemies.push_back(new_enemy);
+        this->currentCountZako++;
+    }
 
-    new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale);
-    tmp = pathManager["flyInCircle"];
-    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
-    rotation = 90;
-    new_enemy->setRotation(rotation);
-    new_enemy->setPath(tmp);
-    this->enemies.push_back(new_enemy);
+    for (int i = 0; i < this->maxCountGoei; ++i) {
+        auto new_enemy = std::make_shared<Goei>(this->formation, this->textureManager["goei"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, i);
+        auto tmp = pathManager["flyInHook"];
+        new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
+        float rotation = 180;
+        new_enemy->setRotation(rotation);
+        new_enemy->setPath(tmp);
+        this->enemies.push_back(new_enemy);
+        this->currentCountGoei++;
+    }
+
+    for (int i = 0; i < this->maxCountBoss; ++i) {
+        auto new_enemy = std::make_shared<Boss>(this->formation, this->textureManager["boss"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, i);
+        auto tmp = pathManager["flyInHook"];
+        new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
+        float rotation = 180;
+        new_enemy->setRotation(rotation);
+        new_enemy->setPath(tmp);
+        this->enemies.push_back(new_enemy);
+        this->currentCountBoss++;
+    }
 }
 
 Game::Game() {
     this->dir_path = std::filesystem::current_path();
     this->initConstants();
     this->initWindow();
+    this->initFormation();
     this->initTextures();
     this->initPaths();
     this->initPlayer();
@@ -172,6 +202,23 @@ void Game::updatePlayers() {
     this->player->update();
 }
 
+void Game::updateFormation() {
+    this->formation->update();
+
+    if (currentCountZako == maxCountZako && currentCountGoei == maxCountGoei && currentCountBoss == maxCountBoss) {
+        bool flyIn = false;
+
+        for (auto & enemy : this->enemies) {
+            if (enemy->getCurrentState() == Enemy::flyIn) {
+                flyIn = true;
+            }
+        }
+        if (!flyIn) {
+            this->formation->lock();
+        }
+    }
+}
+
 void Game::updateEnemies() {
     for (auto & enemy : this->enemies) {
         enemy->update();
@@ -200,6 +247,7 @@ void Game::update() {
     this->updateInput();
     this->updatePlayers();
     this->updateBullets();
+    this->updateFormation();
     this->updateEnemies();
     this->updateCombat();
 }

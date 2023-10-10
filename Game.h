@@ -8,9 +8,9 @@
 #include <SFML/System.hpp>
 #include "Player.h"
 #include "PlayerBullet.h"
-#include "Enemy.h"
 #include "Zako.h"
-#include "BezierPath.h"
+#include "Goei.h"
+#include "Boss.h"
 #include <memory>
 #include <string>
 #include <filesystem>
@@ -30,6 +30,8 @@ private:
 //    std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
     std::map<std::string, std::shared_ptr<BezierPath>> pathManager;
 
+    std::shared_ptr<Formation> formation;
+
     float playerVelocity;
     float bulletsVelocity;
     float enemyVelocity;
@@ -41,10 +43,19 @@ private:
     float bulletsScale;
     float enemiesScale;
 
+    int maxCountZako;
+    int maxCountGoei;
+    int maxCountBoss;
+
+    int currentCountZako;
+    int currentCountGoei;
+    int currentCountBoss;
+
 //  unsigned numberOfEnemies;
     void initConstants();
     void initWindow();
     void initTextures();
+    void initFormation();
     void initPaths();
     void initPlayer();
     std::shared_ptr<PlayerBullet> initNewPlBullet();
@@ -56,6 +67,7 @@ public:
     void updateInput();
     void updateBullets();
     void updatePlayers();
+    void updateFormation();
     void updateEnemies();
     void updateCombat();
     void update();

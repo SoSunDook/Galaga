@@ -4,10 +4,18 @@
 
 #ifndef GALAGA_BOSS_H
 #define GALAGA_BOSS_H
+#include "Enemy.h"
 
+class Boss : public Enemy {
+private:
+    sf::Vector2<float> formationPosition();
 
-class Boss {
+    void handleDiveState() override;
 
+    void handleDeadState() override;
+public:
+    explicit Boss(std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedTexture, float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
+    ~Boss() = default;
 };
 
 

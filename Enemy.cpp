@@ -6,6 +6,10 @@
 #include <cmath>
 #include <iostream>
 
+void Enemy::initFormation(std::shared_ptr<Formation> & formationP) {
+    this->formationPtr = formationP;
+}
+
 void Enemy::initTexture(std::shared_ptr<sf::Texture> & managedTexture) {
     this->texture = managedTexture;
 }
@@ -15,8 +19,8 @@ void Enemy::initSprite() {
     this->sprite.setScale(this->spriteScale, this->spriteScale);
 //    Animation startup
     auto size = this->texture->getSize();
-    sf::Vector2<int> point(size.x / this->spriteDivisor, 0);
-    sf::Vector2<int> vector(size.x / this->spriteDivisor, size.y);
+    sf::Vector2<int> point(static_cast<int>(size.x) / this->spriteDivisor, 0);
+    sf::Vector2<int> vector(static_cast<int>(size.x) / this->spriteDivisor, static_cast<int>(size.y));
     const sf::Rect<int> rectangle(point, vector);
     this->sprite.setTextureRect(rectangle);
 }
@@ -25,71 +29,8 @@ void Enemy::initOrigin() {
     this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
 }
 
-void Enemy::initDynamicPath() {
-    int sample = 120;
-    sf::Vector2<float> origin(300.f, 300.f);
-    sf::Vector2<float> start(620.f, 620.f);
-    this->dynamicPath = std::make_shared<DynamicBezierPath>(DynamicBezierPath(sample, origin.x, origin.y, start.x, start.y));
-}
-
 void Enemy::render(sf::RenderTarget & target) {
     target.draw(this->sprite);
-}
-
-void Enemy::move() {
-//---    Working with scripted path
-    sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) - this->sprite.getPosition();
-    this->setWantedRotation(direction.x, direction.y);
-    float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-    float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
-    if (distance <= movement) {
-//        this->currentPoint++;
-//        if (this->currentPoint >= this->currentPath->getPath().size()){
-//            this->currentPoint = 0;
-//        }
-        if (this->currentPoint < this->currentPath->getPath().size() - 1) {
-            this->currentPoint++;
-        }
-    } else {
-        this->sprite.move((direction / distance) * movement);
-    }
-//---
-
-//---    Working with dynamic path
-//    this->dynamicPath->setOrigin(this->dynamicPath->getOrigin().x + (rand() % 5 - 2), 0.f);
-//
-//    sf::Vector2f direction = this->dynamicPath->getOldPoint() - this->sprite.getPosition();
-//    this->setWantedRotation(direction.x, direction.y);
-//    float distanceNormalize = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-//    float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
-//
-//    if (distanceNormalize <= movement) {
-//
-////        auto directionToOrigin= this->sprite.getPosition() - this->dynamicPath->getOrigin();
-////        float distanceToOrigin = std::sqrt(directionToOrigin.x * directionToOrigin.x + directionToOrigin.y * directionToOrigin.y);
-//
-////        auto tmpDist = distanceToOrigin / this->dynamicPath->getDistance();
-////        if (tmpDist > 0.05f) {
-//
-//        if (this->dynamicPath->getCurrentSample() == static_cast<unsigned>(std::ceil(static_cast<int>(this->dynamicPath->getFullSample()) / 2.))) {
-//            auto tmp_en = this->sprite.getPosition();
-//            auto tmp_dp = this->dynamicPath->getOrigin();
-//
-//            BezierCurve curve(tmp_en, tmp_en, tmp_dp, tmp_dp);
-//            this->dynamicPath->setOldCurve(curve);
-//            this->dynamicPath->setFullSample(this->dynamicPath->getCurrentSample());
-//            this->dynamicPath->updateDelta();
-//        }
-//
-//        sf::Vector2<float> newPoint;
-//
-//        if (this->dynamicPath->calculateNewPoint(newPoint)) {
-//            this->dynamicPath->setOldPoint(newPoint);
-//        }
-//    } else {
-//        this->sprite.move((direction / distanceNormalize) * movement);
-//    }
-//---
 }
 
 void Enemy::updateAttack() {
@@ -130,7 +71,7 @@ void Enemy::updateRotation() {
 
 void Enemy::update() {
     this->updateAttack();
-    this->move();
+    this->handleStates();
     this->updateRotation();
 }
 
@@ -162,6 +103,10 @@ void Enemy::setWantedRotation(float & x, float & y) {
     this->wantedRotation = angle;
 }
 
+void Enemy::setWantedRotation(float & angle) {
+    this->wantedRotation = angle;
+}
+
 void Enemy::setPosition(float & x, float & y) {
     this->sprite.setPosition(x, y);
 }
@@ -171,20 +116,39 @@ void Enemy::setPath(std::shared_ptr<BezierPath> & path) {
     this->currentPoint = 0;
 }
 
-void Enemy::handleFlyInState() {
+void Enemy::flyInComplete() {
+    this->sprite.setPosition(this->formationPtr->getPosition() + this->targetPosition);
+    float zeroRotation = 0.f;
+    this->setWantedRotation(zeroRotation);
+    this->currentState = STATES::formation;
+}
 
+void Enemy::handleFlyInState() {
+    if (this->currentPoint < this->currentPath->getPath().size()) {
+        sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) - this->sprite.getPosition();
+        this->setWantedRotation(direction.x, direction.y);
+        float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
+        if (distance <= movement) {
+            this->currentPoint++;
+        } else {
+            this->sprite.move((direction / distance) * movement);
+        }
+    } else {
+        sf::Vector2f direction = this->formationPtr->getPosition() + this->targetPosition - this->sprite.getPosition();
+        this->setWantedRotation(direction.x, direction.y);
+        float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
+        if (distance > movement) {
+            this->sprite.move((direction / distance) * movement);
+        } else {
+            this->flyInComplete();
+        }
+    }
 }
 
 void Enemy::handleFormationState() {
-
-}
-
-void Enemy::handleDiveState() {
-
-}
-
-void Enemy::handleDeadState() {
-
+    this->sprite.setPosition(this->formationPtr->getPosition() + this->targetPosition);
 }
 
 void Enemy::handleStates() {
@@ -202,6 +166,10 @@ void Enemy::handleStates() {
             this->handleDeadState();
             break;
     }
+}
+
+Enemy::STATES & Enemy::getCurrentState() {
+    return this->currentState;
 }
 
 sf::FloatRect Enemy::getGlobalBounds() {

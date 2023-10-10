@@ -10,6 +10,7 @@
 #include <valarray>
 #include "BezierPath.h"
 #include "DynamicBezierPath.h"
+#include "Formation.h"
 
 class Enemy {
 public:
@@ -22,6 +23,8 @@ public:
 protected:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
+
+    std::shared_ptr<Formation> formationPtr;
 
     sf::Clock moveClock{};
     sf::Clock shootClock{};
@@ -38,19 +41,31 @@ protected:
     float velocity{};
     float rotationVelocity{};
 
-    float wantedRotation{};
+    sf::Time enemyShootCooldown{};
+
+    int healthPoints{};
+    int worthPoints{};
 
     STATES currentState{};
 
-    int healthPoints{};
+    float wantedRotation{};
 
-    int worthPoints{};
+    sf::Vector2<float> targetPosition{};
 
-    sf::Time enemyShootCooldown{};
+    int index{};
 
+    void initFormation(std::shared_ptr<Formation> & formationP);
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
     void initOrigin();
+protected:
+    void flyInComplete();
+
+    void handleFlyInState();
+    void handleFormationState();
+    virtual void handleDiveState() = 0;
+    virtual void handleDeadState() = 0;
+    void handleStates();
 public:
     Enemy() = default;
     ~Enemy() = default;
@@ -59,27 +74,20 @@ public:
     void updateAttack();
     void update();
 
-    void handleFlyInState();
-    void handleFormationState();
-    void handleDiveState();
-    void handleDeadState();
-    void handleStates();
-
     void render(sf::RenderTarget & target);
-
-    void move();
 
     bool canAttack();
 
     void setRotation(float & angle);
 
     void setWantedRotation(float & x, float & y);
+    void setWantedRotation(float & angle);
 
     void setPosition(float & x, float & y);
 
     void setPath(std::shared_ptr<BezierPath> & path);
 
-    void initDynamicPath();
+    STATES & getCurrentState();
 
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();

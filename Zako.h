@@ -7,8 +7,14 @@
 #include "Enemy.h"
 
 class Zako : public Enemy {
+private:
+    sf::Vector2<float> formationPosition();
+
+    void handleDiveState() override;
+
+    void handleDeadState() override;
 public:
-    explicit Zako(std::shared_ptr<sf::Texture> & managedTexture, float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale);
+    explicit Zako(std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedTexture, float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
     ~Zako() = default;
 };
 
