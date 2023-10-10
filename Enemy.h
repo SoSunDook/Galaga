@@ -12,6 +12,13 @@
 #include "DynamicBezierPath.h"
 
 class Enemy {
+public:
+    enum STATES {
+        flyIn,
+        formation,
+        dive,
+        dead
+    };
 protected:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
@@ -24,7 +31,7 @@ protected:
     float spriteScale{};
 
     std::shared_ptr<BezierPath> currentPath;
-    unsigned currentPoint;
+    unsigned currentPoint{};
 
     std::shared_ptr<DynamicBezierPath> dynamicPath;
 
@@ -32,6 +39,8 @@ protected:
     float rotationVelocity{};
 
     float wantedRotation{};
+
+    STATES currentState{};
 
     int healthPoints{};
 
@@ -41,6 +50,7 @@ protected:
 
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
+    void initOrigin();
 public:
     Enemy() = default;
     ~Enemy() = default;
@@ -49,11 +59,19 @@ public:
     void updateAttack();
     void update();
 
+    void handleFlyInState();
+    void handleFormationState();
+    void handleDiveState();
+    void handleDeadState();
+    void handleStates();
+
     void render(sf::RenderTarget & target);
 
     void move();
 
     bool canAttack();
+
+    void setRotation(float & angle);
 
     void setWantedRotation(float & x, float & y);
 

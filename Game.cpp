@@ -37,38 +37,80 @@ void Game::initTextures() {
 }
 
 void Game::initPaths() {
-    auto new_path = std::make_shared<BezierPath>();
-    sf::Vector2<float> p0(720, 720);
-    sf::Vector2<float> p3(0, 0);
-    sf::Vector2<float> p1(720, 0);
-    sf::Vector2<float> p2(0, 720);
-    auto new_curve = BezierCurve(p0, p1, p2, p3);
-    int a = 60;
-    new_path->addCurve(new_curve, a);
+    int samples = 60;
+
+    std::shared_ptr<BezierPath> new_path;
+    sf::Vector2<float> p0, p1, p2, p3;
+    BezierCurve new_curve;
+
+    new_path = std::make_shared<BezierPath>();
+    p0 = {435, -75};
+    p3 = {25, 335};
+    p1 = {435, 205};
+    p2 = {25, 205};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+    p0 = {25, 335};
+    p3 = {285, 335};
+    p1 = {25, 595};
+    p2 = {285, 595};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
     new_path->makePath();
-    pathManager["zakoDefault"] = new_path;
+    pathManager["flyInHook"] = new_path;
+
+    new_path = std::make_shared<BezierPath>();
+    p0 = {-75, 600};
+    p3 = {285, 410};
+    p1 = {50, 600};
+    p2 = {285, 600};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+    p0 = {285, 410};
+    p3 = {25, 410};
+    p1 = {285, 150};
+    p2 = {25, 150};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+    p0 = {25, 410};
+    p3 = {285, 410};
+    p1 = {25, 670};
+    p2 = {285, 670};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+    new_path->makePath();
+    pathManager["flyInCircle"] = new_path;
+
+// flyInCircleMirrored = {720 - point.x, point.y};
 }
 
 void Game::initPlayer() {
-    this->player = std::make_unique<Player>(this->textureManager["galaga"], *window, this->playerVelocity, this->playerShootCooldown);
+    this->player = std::make_unique<Player>(this->textureManager["galaga"], this->playerVelocity, this->playerShootCooldown);
 }
 
 std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
     auto newBullet = std::make_shared<PlayerBullet>(this->textureManager["bulletPlayer"], this->bulletsScale, this->bulletsVelocity);
-    auto pos_x = this->player->getGlobalBounds().getPosition().x + (this->player->getLocalBounds().getSize().x - (newBullet->getLocalBounds().getSize().x * this->bulletsScale)) / 2;
-    auto pos_y = this->player->getGlobalBounds().getPosition().y - (newBullet->getLocalBounds().getSize().y * this->bulletsScale);
+    auto pos_x = this->player->getGlobalBounds().getPosition().x + this->player->getOrigin().x;
+    auto pos_y = this->player->getGlobalBounds().getPosition().y - newBullet->getGlobalBounds().getSize().y / 2;
     newBullet->setPosition(pos_x, pos_y);
     return newBullet;
 }
 
 void Game::initEnemies() {
     auto new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale);
-//    auto tmp = pathManager["zakoDefault"];
-//    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
-//    new_enemy->setPath(tmp);
-    float x = 620.f;
-    float y = 620.f;
-    new_enemy->setPosition(x, y);
+    auto tmp = pathManager["flyInHook"];
+    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
+    float rotation = 180;
+    new_enemy->setRotation(rotation);
+    new_enemy->setPath(tmp);
+    this->enemies.push_back(new_enemy);
+
+    new_enemy = std::make_shared<Zako>(this->textureManager["zako"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale);
+    tmp = pathManager["flyInCircle"];
+    new_enemy->setPosition(tmp->getPath().at(0).x, tmp->getPath().at(0).y);
+    rotation = 90;
+    new_enemy->setRotation(rotation);
+    new_enemy->setPath(tmp);
     this->enemies.push_back(new_enemy);
 }
 
@@ -87,16 +129,19 @@ void Game::updateInput() {
     bool right = false;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
         left = true;
-        this->player->move(-1.f, 0.f, *window);
+        this->player->move(-1.f, 0.f);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
         right = true;
-        this->player->move(1.f, 0.f, *window);
+        this->player->move(1.f, 0.f);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
         auto newBullet = this->initNewPlBullet();
         auto tmp_bvl = -this->bulletsVelocity;
-        if (left) {
+        if (left && right) {
+            auto tmp_vel = 0.f;
+            newBullet->setDirection(tmp_vel, tmp_bvl);
+        } else if (left) {
             auto tmp_vel = -this->playerVelocity;
             newBullet->setDirection(tmp_vel, tmp_bvl);
         } else if (right) {

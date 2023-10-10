@@ -13,6 +13,10 @@ void Bullet::initSprite() {
     this->sprite.setScale(this->spriteScale, this->spriteScale);
 }
 
+void Bullet::initOrigin() {
+    this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
+}
+
 void Bullet::setPosition(float & pos_x, float & pos_y) {
     this->sprite.setPosition(pos_x, pos_y);
 }
@@ -30,6 +34,10 @@ void Bullet::move() {
     this->sprite.move(this->velocity * this->dir_x, this->velocity * this->dir_y);
 }
 
+void Bullet::update() {
+    this->move();
+}
+
 sf::FloatRect Bullet::getGlobalBounds() {
     return this->sprite.getGlobalBounds();
 }
@@ -38,6 +46,6 @@ sf::FloatRect Bullet::getLocalBounds() {
     return this->sprite.getLocalBounds();
 }
 
-void Bullet::update() {
-    this->move();
+sf::Vector2<float> Bullet::getOrigin() {
+    return this->sprite.getOrigin();
 }

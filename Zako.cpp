@@ -12,7 +12,9 @@ Zako::Zako(std::shared_ptr<sf::Texture> & managedTexture, float & velocity, floa
     this->rotationVelocity = enemyRotationVelocity;
     this->enemyShootCooldown = enemyShootCooldown;
     this->wantedRotation = 0.f;
+    this->currentState = STATES::flyIn;
     this->initTexture(managedTexture);
     this->initSprite();
+    this->initOrigin();
     this->initDynamicPath();
 }

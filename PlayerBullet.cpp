@@ -9,4 +9,5 @@ PlayerBullet::PlayerBullet(std::shared_ptr<sf::Texture> & managedTexture, float 
     this->velocity = velocity;
     this->initTexture(managedTexture);
     this->initSprite();
+    this->initOrigin();
 }

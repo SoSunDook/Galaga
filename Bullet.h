@@ -18,12 +18,13 @@ protected:
     float dir_y{};
 
     float velocity{};
-public:
-    Bullet() = default;
-    ~Bullet() = default;
 
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
+    void initOrigin();
+public:
+    Bullet() = default;
+    ~Bullet() = default;
 
     void setPosition(float & pos_x, float & pos_y);
     void setDirection(float & new_dir_x, float & new_dir_y);
@@ -36,6 +37,7 @@ public:
 
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();
+    sf::Vector2<float> getOrigin();
 };
 
 
