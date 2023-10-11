@@ -116,11 +116,19 @@ void Enemy::setPath(std::shared_ptr<BezierPath> & path) {
     this->currentPoint = 0;
 }
 
-void Enemy::flyInComplete() {
-    this->sprite.setPosition(this->formationPtr->getPosition() + this->targetPosition);
+sf::Vector2<float> Enemy::globalFormationPosition() {
+    return this->formationPtr->getPosition() + this->localFormationPosition();
+}
+
+void Enemy::joinFormation() {
+    this->sprite.setPosition(this->globalFormationPosition());
     float zeroRotation = 0.f;
     this->setWantedRotation(zeroRotation);
     this->currentState = STATES::formation;
+}
+
+void Enemy::flyInComplete() {
+    this->joinFormation();
 }
 
 void Enemy::handleFlyInState() {
@@ -135,7 +143,7 @@ void Enemy::handleFlyInState() {
             this->sprite.move((direction / distance) * movement);
         }
     } else {
-        sf::Vector2f direction = this->formationPtr->getPosition() + this->targetPosition - this->sprite.getPosition();
+        sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
         float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
@@ -148,7 +156,7 @@ void Enemy::handleFlyInState() {
 }
 
 void Enemy::handleFormationState() {
-    this->sprite.setPosition(this->formationPtr->getPosition() + this->targetPosition);
+    this->sprite.setPosition(this->globalFormationPosition());
 }
 
 void Enemy::handleStates() {

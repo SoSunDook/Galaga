@@ -11,16 +11,16 @@ Formation::Formation() {
 
     this->offsetAmount = 20.f;
     this->offsetTimer = 0.f;
-    this->offsetDelay = 1.f;
+    this->offsetDelay = 0.6f;
     this->offsetCounter = 4;
     this->offsetDirection = 1;
 
     this->spreadTimer = 0.f;
-    this->spreadDelay = 1.f;
+    this->spreadDelay = 0.6f;
     this->spreadCounter = 0 ;
     this->spreadDirection = 1;
 
-    this->gridSize = {25.f, 42.f};
+    this->gridSize = {24.f, 42.f};
 
     this->locked = false;
 }
@@ -52,6 +52,19 @@ void Formation::update() {
             }
 
             this->offsetTimer = 0.f;
+        }
+    } else {
+        this->spreadTimer += this->clock.restart().asSeconds();
+        if (this->spreadTimer >= this->spreadDelay) {
+            this->spreadCounter += this->spreadDirection;
+
+            this->gridSize.x += static_cast<float>(this->spreadDirection * ((this->spreadCounter % 2 == 0) ? 1 : 2));
+
+            if (this->spreadCounter == 4 || this->spreadCounter == 0) {
+                this->spreadDirection *= -1;
+            }
+
+            this->spreadTimer = 0.f;
         }
     }
 }

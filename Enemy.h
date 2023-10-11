@@ -50,8 +50,6 @@ protected:
 
     float wantedRotation{};
 
-    sf::Vector2<float> targetPosition{};
-
     int index{};
 
     void initFormation(std::shared_ptr<Formation> & formationP);
@@ -59,6 +57,11 @@ protected:
     void initSprite();
     void initOrigin();
 protected:
+    virtual sf::Vector2<float> localFormationPosition() = 0;
+    sf::Vector2<float> globalFormationPosition();
+
+    void joinFormation();
+
     void flyInComplete();
 
     void handleFlyInState();

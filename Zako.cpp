@@ -15,13 +15,12 @@ Zako::Zako(std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::T
     this->wantedRotation = 0.f;
     this->currentState = STATES::flyIn;
     this->initFormation(enemyFormationPtr);
-    this->targetPosition = this->formationPosition();
     this->initTexture(managedTexture);
     this->initSprite();
     this->initOrigin();
 }
 
-sf::Vector2<float> Zako::formationPosition() {
+sf::Vector2<float> Zako::localFormationPosition() {
     sf::Vector2<float> pos;
     pos.x = (this->formationPtr->getGridSize().x + this->formationPtr->getGridSize().x * 2 * static_cast<float>(this->index / 4)) * static_cast<float>(std::pow(-1, this->index % 2 + 1));
 	pos.y = this->formationPtr->getGridSize().y * 2 + this->formationPtr->getGridSize().y * static_cast<float>((this->index % 4) / 2);

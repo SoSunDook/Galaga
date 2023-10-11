@@ -8,7 +8,7 @@
 
 class Zako : public Enemy {
 private:
-    sf::Vector2<float> formationPosition();
+    sf::Vector2<float> localFormationPosition() override;
 
     void handleDiveState() override;
 
