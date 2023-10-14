@@ -35,6 +35,7 @@ public:
     sf::Vector2<float> & getGridSize();
 
     void lock();
+    bool isLocked();
 
     void update();
 };

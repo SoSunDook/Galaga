@@ -20,11 +20,20 @@ public:
         dive,
         dead
     };
+    enum TYPES {
+        zako,
+        goei,
+        boss
+    };
 protected:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
 
     std::shared_ptr<Formation> formationPtr;
+
+    std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> paths;
+
+    TYPES type{};
 
     sf::Clock moveClock{};
     sf::Clock shootClock{};
@@ -35,8 +44,6 @@ protected:
 
     std::shared_ptr<BezierPath> currentPath;
     unsigned currentPoint{};
-
-    std::shared_ptr<DynamicBezierPath> dynamicPath;
 
     float velocity{};
     float rotationVelocity{};
@@ -52,10 +59,16 @@ protected:
 
     int index{};
 
+    sf::Vector2<float> diveStartPosition{};
+
+    void initSpawnPath(std::shared_ptr<BezierPath> & spawningPath);
     void initFormation(std::shared_ptr<Formation> & formationP);
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
+    void initPaths(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths);
     void initSprite();
     void initOrigin();
+    void initRotation();
+    void initSpawnPosition();
 protected:
     virtual sf::Vector2<float> localFormationPosition() = 0;
     sf::Vector2<float> globalFormationPosition();
@@ -69,15 +82,18 @@ protected:
     virtual void handleDiveState() = 0;
     virtual void handleDeadState() = 0;
     void handleStates();
+
+    void updateRotation();
+    void updateAttack();
 public:
     Enemy() = default;
     ~Enemy() = default;
 
-    void updateRotation();
-    void updateAttack();
     void update();
 
     void render(sf::RenderTarget & target);
+
+    void toDive();
 
     bool canAttack();
 
@@ -91,6 +107,8 @@ public:
     void setPath(std::shared_ptr<BezierPath> & path);
 
     STATES & getCurrentState();
+
+    TYPES & getType();
 
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();

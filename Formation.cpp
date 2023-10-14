@@ -37,6 +37,10 @@ void Formation::lock() {
     this->locked = true;
 }
 
+bool Formation::isLocked() {
+    return this->locked && this->offsetCounter == 4;
+}
+
 void Formation::update() {
     if ((!this->locked) || (this->offsetCounter != 4)) {
         this->offsetTimer += this->clock.restart().asSeconds();

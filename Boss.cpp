@@ -4,20 +4,25 @@
 
 #include "Boss.h"
 
-Boss::Boss(std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedTexture, float & velocity,float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
+Boss::Boss(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedTexture,
+           float & velocity,float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 2;
     this->worthPoints = 150;
+    this->type = TYPES::boss;
     this->spriteScale = spriteScale;
     this->velocity = velocity;
     this->rotationVelocity = enemyRotationVelocity;
     this->enemyShootCooldown = enemyShootCooldown;
     this->index = enemyIndex;
-    this->wantedRotation = 0.f;
     this->currentState = STATES::flyIn;
+    this->initSpawnPath(spawningPath);
     this->initFormation(enemyFormationPtr);
     this->initTexture(managedTexture);
+    this->initPaths(managedPaths);
     this->initSprite();
     this->initOrigin();
+    this->initRotation();
+    this->initSpawnPosition();
 }
 
 sf::Vector2<float> Boss::localFormationPosition() {

@@ -6,12 +6,41 @@
 #include <cmath>
 #include <iostream>
 
+void Enemy::initSpawnPath(std::shared_ptr<BezierPath> & spawningPath) {
+    this->setPath(spawningPath);
+}
+
 void Enemy::initFormation(std::shared_ptr<Formation> & formationP) {
     this->formationPtr = formationP;
 }
 
 void Enemy::initTexture(std::shared_ptr<sf::Texture> & managedTexture) {
     this->texture = managedTexture;
+}
+
+void Enemy::initPaths(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths) {
+    this->paths = managedPaths;
+}
+
+void Enemy::initRotation() {
+    sf::Vector2<float> direction = this->currentPath->getPath().at(1) - this->currentPath->getPath().at(0);
+    auto angle = static_cast<float>(std::atan2(-direction.y, direction.x)) * 180.f / static_cast<float>(M_PI);
+    if (angle < 0) {
+        angle += 360;
+    }
+    angle -= 90;
+    angle = 360 - angle;
+    if (angle > 360) {
+        angle -= 360;
+    }
+    if (angle < 0) {
+        angle += 360;
+    }
+    this->setRotation(angle);
+}
+
+void Enemy::initSpawnPosition() {
+    this->sprite.setPosition(this->currentPath->getPath().at(0));
 }
 
 void Enemy::initSprite() {
@@ -39,6 +68,10 @@ void Enemy::updateAttack() {
 
 void Enemy::updateRotation() {
     float rotationDifference = this->wantedRotation - this->sprite.getRotation();
+
+    if (rotationDifference == 0) {
+        return;
+    }
 
     float maxRotation = this->rotationVelocity * static_cast<float>(rotationClock.restart().asSeconds());
 
@@ -159,6 +192,11 @@ void Enemy::handleFormationState() {
     this->sprite.setPosition(this->globalFormationPosition());
 }
 
+void Enemy::toDive() {
+    this->currentState = STATES::dive;
+    this->diveStartPosition = this->sprite.getPosition();
+}
+
 void Enemy::handleStates() {
     switch (this->currentState) {
         case flyIn:
@@ -178,6 +216,10 @@ void Enemy::handleStates() {
 
 Enemy::STATES & Enemy::getCurrentState() {
     return this->currentState;
+}
+
+Enemy::TYPES & Enemy::getType() {
+    return this->type;
 }
 
 sf::FloatRect Enemy::getGlobalBounds() {

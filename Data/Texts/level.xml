@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Level>
+    <Spawn path="flyInHookMirrored" priority="0">
+        <Enemy type="goei" index="0"/>
+        <Enemy type="goei" index="1"/>
+        <Enemy type="goei" index="2"/>
+        <Enemy type="goei" index="3"/>
+    </Spawn>
+    <Spawn path="flyInHook" priority="0">
+        <Enemy type="zako" index="0"/>
+        <Enemy type="zako" index="1"/>
+        <Enemy type="zako" index="2"/>
+        <Enemy type="zako" index="3"/>
+    </Spawn>
+    <Spawn path="flyInCircle" priority="1">
+        <Enemy type="boss" index="2"/>
+        <Enemy type="goei" index="4"/>
+        <Enemy type="boss" index="0"/>
+        <Enemy type="goei" index="5"/>
+        <Enemy type="boss" index="1"/>
+        <Enemy type="goei" index="6"/>
+        <Enemy type="boss" index="3"/>
+        <Enemy type="goei" index="7"/>
+    </Spawn>
+    <Spawn path="flyInCircleMirrored" priority="2">
+        <Enemy type="goei" index="8"/>
+        <Enemy type="goei" index="9"/>
+        <Enemy type="goei" index="10"/>
+        <Enemy type="goei" index="11"/>
+        <Enemy type="goei" index="12"/>
+        <Enemy type="goei" index="13"/>
+        <Enemy type="goei" index="14"/>
+        <Enemy type="goei" index="15"/>
+    </Spawn>
+    <Spawn path="flyInHook" priority="3">
+        <Enemy type="zako" index="4"/>
+        <Enemy type="zako" index="5"/>
+        <Enemy type="zako" index="6"/>
+        <Enemy type="zako" index="7"/>
+        <Enemy type="zako" index="8"/>
+        <Enemy type="zako" index="9"/>
+        <Enemy type="zako" index="10"/>
+        <Enemy type="zako" index="11"/>
+    </Spawn>
+    <Spawn path="flyInHookMirrored" priority="4">
+        <Enemy type="zako" index="12"/>
+        <Enemy type="zako" index="13"/>
+        <Enemy type="zako" index="14"/>
+        <Enemy type="zako" index="15"/>
+        <Enemy type="zako" index="16"/>
+        <Enemy type="zako" index="17"/>
+        <Enemy type="zako" index="18"/>
+        <Enemy type="zako" index="19"/>
+    </Spawn>
+</Level>
