@@ -28,9 +28,28 @@ void Game::initConstants() {
     this->currentFlyInIndex = {};
 
     this->spawningFinished = {};
-    this->spawningDelay = sf::milliseconds(130);
-    this->spawningTimer = sf::milliseconds(0);
+    this->spawningDelay = 0.13f;
+    this->spawningTimer = 0.f;
     this->spawnClock = {};
+
+    this->divingGoei = {};
+    this->skipFirstGoei = false;
+    this->goeiDiveDelay = 6.f;
+    this->goeiDiveTimer = 0.f;
+    this->goeiDiveClock = {};
+
+    this->firstDivingZako = {};
+    this->secondDivingZako = {};
+    this->zakoDiveDelay = 3.5f;
+    this->zakoDiveTimer = 0.f;
+    this->zakoDiveTimer = {};
+
+    this->divingBoss = {};
+    this->captureDive = {};
+    this->skipFirstBoss = {};
+    this->bossDiveDelay = 7.f;
+    this->bossDiveTimer = 0.f;
+    this->bossDiveClock = {};
 }
 
 void Game::initWindow() {
@@ -52,13 +71,19 @@ void Game::initTextures() {
     }
 }
 
+void Game::initFormationVectors() {
+    this->formationZakos.resize(this->maxCountZako);
+    this->formationGoeis.resize(this->maxCountGoei);
+    this->formationBosses.resize(this->maxCountBoss);
+}
+
 void Game::initFormation() {
     this->formation = std::make_shared<Formation>();
 }
 
 void Game::initSpawningPatterns() {
     std::string spawningPatternsPath = this->dir_path.string() + "\\Data\\Texts\\level.xml";
-    auto a = this->spawningPatterns.load_file(spawningPatternsPath.c_str());
+    this->spawningPatterns.load_file(spawningPatternsPath.c_str());
 }
 
 void Game::initPaths() {
@@ -162,10 +187,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
-    p0 = {720 - p0.x, p0.y};
-    p1 = {720 - p1.x, p1.y};
-    p2 = {720 - p2.x, p2.y};
-    p3 = {720 - p3.x, p3.y};
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
@@ -177,11 +202,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
-    p0 = {720 - p0.x, p0.y};
-    p1 = {720 - p1.x, p1.y};
-    p2 = {720 - p2.x, p2.y};
-    p3 = {720 - p3.x, p3.y};
-
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
@@ -195,10 +219,10 @@ void Game::initPaths() {
     new_path->makePath();
     pathManager->operator[]("divezako") = new_path;
 
-    p0 = {720 - p0.x, p0.y};
-    p1 = {720 - p1.x, p1.y};
-    p2 = {720 - p2.x, p2.y};
-    p3 = {720 - p3.x, p3.y};
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
     new_path_mirrored->makePath();
@@ -214,10 +238,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
-    p0 = {720 - p0.x, p0.y};
-    p1 = {720 - p1.x, p1.y};
-    p2 = {720 - p2.x, p2.y};
-    p3 = {720 - p3.x, p3.y};
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
@@ -229,11 +253,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
-    p0 = {720 - p0.x, p0.y};
-    p1 = {720 - p1.x, p1.y};
-    p2 = {720 - p2.x, p2.y};
-    p3 = {720 - p3.x, p3.y};
-
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
@@ -245,11 +268,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
-    p0 = {720 - p0.x, p0.y};
-    p1 = {720 - p1.x, p1.y};
-    p2 = {720 - p2.x, p2.y};
-    p3 = {720 - p3.x, p3.y};
-
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
@@ -261,11 +283,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
-    p0 = {720 - p0.x, p0.y};
-    p1 = {720 - p1.x, p1.y};
-    p2 = {720 - p2.x, p2.y};
-    p3 = {720 - p3.x, p3.y};
-
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
@@ -279,10 +300,10 @@ void Game::initPaths() {
     new_path->makePath();
     pathManager->operator[]("divegoei") = new_path;
 
-    p0 = {720 - p0.x, p0.y};
-    p1 = {720 - p1.x, p1.y};
-    p2 = {720 - p2.x, p2.y};
-    p3 = {720 - p3.x, p3.y};
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
     new_path_mirrored->makePath();
@@ -306,6 +327,7 @@ Game::Game() {
     this->initConstants();
     this->initSpawningPatterns();
     this->initWindow();
+    this->initFormationVectors();
     this->initFormation();
     this->initTextures();
     this->initPaths();
@@ -360,8 +382,30 @@ void Game::updatePlayers() {
     this->player->update();
 }
 
+bool Game::enemyFlyinIn() {
+    for (auto & zako : this->formationZakos) {
+        if (zako && zako->getCurrentState() == Enemy::STATES::flyIn) {
+            return true;
+        }
+    }
+
+    for (auto & goei : this->formationGoeis) {
+        if (goei && goei->getCurrentState() == Enemy::STATES::flyIn) {
+            return true;
+        }
+    }
+
+    for (auto & boss : this->formationBosses) {
+        if (boss && boss->getCurrentState() == Enemy::STATES::flyIn) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Game::handleSpawning() {
-    this->spawningTimer += this->spawnClock.restart();
+    this->spawningTimer += this->spawnClock.restart().asSeconds();
     if (this->spawningTimer >= this->spawningDelay) {
         auto element = this->spawningPatterns.root().child("Level").first_child();
         bool spawned = false;
@@ -383,23 +427,23 @@ void Game::handleSpawning() {
 
                     if (type == "zako") {
 
-                        auto new_enemy_zako = std::make_shared<Zako>(this->pathManager, pathManager->operator[](path), this->formation, this->textureManager["zako"],
+                        auto new_enemy_zako = std::make_shared<Zako>(this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["zako"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
-                        this->enemies.push_back(new_enemy_zako);
+                        this->formationZakos.at(index) = new_enemy_zako;
                         this->currentCountZako++;
 
                     } else if (type == "goei") {
 
-                        auto new_enemy_goei = std::make_shared<Goei>(this->pathManager, pathManager->operator[](path), this->formation, this->textureManager["goei"],
+                        auto new_enemy_goei = std::make_shared<Goei>(this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["goei"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
-                        this->enemies.push_back(new_enemy_goei);
+                        this->formationGoeis.at(index) = new_enemy_goei;
                         this->currentCountGoei++;
 
                     } else if (type == "boss") {
 
-                        auto new_enemy_boss = std::make_shared<Boss>(this->pathManager, pathManager->operator[](path), this->formation, this->textureManager["boss"],
+                        auto new_enemy_boss = std::make_shared<Boss>(this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["boss"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
-                        this->enemies.push_back(new_enemy_boss);
+                        this->formationBosses.at(index) = new_enemy_boss;
                         this->currentCountBoss++;
 
                     }
@@ -414,16 +458,7 @@ void Game::handleSpawning() {
             this->spawningFinished = true;
         } else {
             if (!spawned) {
-                bool flyingIn = false;
-
-                for (auto & enemy : enemies) {
-                    if (enemy->getCurrentState() == Enemy::STATES::flyIn) {
-                        flyingIn = true;
-                        break;
-                    }
-                }
-
-                if (!flyingIn) {
+                if (!this->enemyFlyinIn()) {
                     this->currentFlyInPriority++;
                     this->currentFlyInIndex = 0;
                 }
@@ -431,49 +466,162 @@ void Game::handleSpawning() {
                 this->currentFlyInIndex++;
             }
         }
-        this->spawningTimer = sf::milliseconds(0);
+        this->spawningTimer = 0.f;
     }
 }
 
 void Game::handleFormation() {
     this->formation->update();
 
-    if (currentCountZako == maxCountZako && currentCountGoei == maxCountGoei && currentCountBoss == maxCountBoss) {
-        bool flyIn = false;
-
-        for (auto & enemy : this->enemies) {
-            if (enemy->getCurrentState() == Enemy::flyIn) {
-                flyIn = true;
+    if (!this->formation->isLocked()) {
+        if (currentCountZako == maxCountZako && currentCountGoei == maxCountGoei && currentCountBoss == maxCountBoss) {
+            if (!this->enemyFlyinIn()) {
+                this->formation->lock();
             }
         }
-        if (!flyIn) {
-            this->formation->lock();
+    } else {
+       this->handleDiving();
+    }
+}
+
+void Game::handleDiving() {
+    if (this->divingGoei == nullptr) {
+        this->goeiDiveTimer += this->goeiDiveClock.restart().asSeconds();
+        if (this->goeiDiveTimer >= this->goeiDiveDelay) {
+            bool skipped = false;
+            for (int i = this->formationGoeis.size() - 1; i >= 0; --i) {
+                if (this->formationGoeis[i]->getCurrentState() == Enemy::STATES::formation) {
+                    if (!this->skipFirstGoei || (this->skipFirstGoei && skipped)) {
+                        this->divingGoei = this->formationGoeis[i];
+                        std::string path = "divegoei";
+                        if (i % 2 == 1) {
+                            path.append("Mirrored");
+                        }
+                        this->divingGoei->setPath(this->pathManager->operator[](path));
+                        this->divingGoei->toDive();
+                        this->skipFirstGoei = !this->skipFirstGoei;
+                        break;
+                    }
+                    skipped = true;
+                }
+            }
+            this->goeiDiveTimer = 0.f;
+        }
+    } else {
+        if (this->divingGoei->getCurrentState() != Enemy::STATES::dive) {
+            this->divingGoei = std::shared_ptr<Enemy>();
+        }
+    }
+
+    this->zakoDiveTimer += this->zakoDiveClock.restart().asSeconds();
+    if (this->zakoDiveTimer >= this->zakoDiveDelay) {
+        for (int i = this->formationZakos.size() - 1; i >= 0; --i) {
+            if (this->formationZakos[i]->getCurrentState() == Enemy::STATES::formation) {
+                if (this->firstDivingZako == nullptr) {
+                    this->firstDivingZako = this->formationZakos[i];
+                    std::string path = "divezako";
+                    if (i % 2 == 1) {
+                        path.append("Mirrored");
+                    }
+                    this->firstDivingZako->setPath(this->pathManager->operator[](path));
+                    this->firstDivingZako->toDive();
+                } else if (this->secondDivingZako == nullptr) {
+                    this->secondDivingZako = this->formationZakos[i];
+                    std::string path = "divezako";
+                    if (i % 2 == 1) {
+                        path.append("Mirrored");
+                    }
+                    this->secondDivingZako->setPath(this->pathManager->operator[](path));
+                    this->secondDivingZako->toDive();
+                }
+                break;
+            }
+        }
+        this->zakoDiveTimer = 0.f;
+    }
+
+    if (this->firstDivingZako != nullptr && this->firstDivingZako->getCurrentState() != Enemy::STATES::dive) {
+        this->firstDivingZako = {};
+    }
+    if (this->secondDivingZako != nullptr && this->secondDivingZako->getCurrentState() != Enemy::STATES::dive) {
+        this->secondDivingZako = {};
+    }
+
+    if (this->divingBoss == nullptr) {
+        this->bossDiveTimer += this->bossDiveClock.restart().asSeconds();
+        if (this->bossDiveTimer >= this->bossDiveDelay) {
+            bool skipped = false;
+            for (int i = this->formationBosses.size() - 1; i >= 0; --i) {
+                if (this->formationBosses[i]->getCurrentState() == Enemy::STATES::formation) {
+                    if (!this->skipFirstBoss || (this->skipFirstBoss && skipped)) {
+                        this->divingBoss = this->formationBosses[i];
+                        if (this->captureDive) {
+                            this->divingBoss->toDive(true);
+                        } else {
+                            this->divingBoss->toDive();
+                            int index = this->divingBoss->getIndex();
+                            int firstEscortIndex = (index % 2 == 0) ? (index * 2) : (index * 2 - 1);
+                            int secondEscortIndex = firstEscortIndex + 4;
+
+                            if (this->formationGoeis[firstEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
+                                this->formationGoeis[firstEscortIndex]->toDive(true);
+                            }
+                            if (this->formationGoeis[secondEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
+                                this->formationGoeis[secondEscortIndex]->toDive(true);
+                            }
+                        }
+                        this->skipFirstBoss = !this->skipFirstBoss;
+                        this->captureDive = !this->captureDive;
+                        break;
+                    }
+                    skipped = true;
+                }
+            }
+            this->bossDiveTimer = 0.f;
+        }
+    } else {
+        if (this->divingBoss->getCurrentState() != Enemy::STATES::dive) {
+            this->divingBoss = {};
         }
     }
 }
 
 void Game::updateEnemies() {
-    for (auto & enemy : this->enemies) {
-        enemy->update();
+    for (auto & zako : this->formationZakos) {
+        if (zako) {
+            zako->update();
+        }
+    }
+
+    for (auto & goei : this->formationGoeis) {
+        if (goei) {
+            goei->update();
+        }
+    }
+
+    for (auto & boss : this->formationBosses) {
+        if (boss) {
+            boss->update();
+        }
     }
 }
 
 void Game::updateCombat() {
-    for (auto enemy_iter = this->enemies.begin(); enemy_iter != this->enemies.end(); ) {
-        bool enemy_deleted = false;
-        for (auto pl_bullet_iter = this->playerBullets.begin(); (pl_bullet_iter != this->playerBullets.end()) && (!enemy_deleted); ) {
-            if (enemy_iter->get()->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
-                enemy_iter = this->enemies.erase(enemy_iter);
-                pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
-                enemy_deleted = true;
-            } else {
-                ++pl_bullet_iter;
-            }
-        }
-        if (!enemy_deleted) {
-            ++enemy_iter;
-        }
-    }
+//    for (auto enemy_iter = this->enemies.begin(); enemy_iter != this->enemies.end(); ) {
+//        bool enemy_deleted = false;
+//        for (auto pl_bullet_iter = this->playerBullets.begin(); (pl_bullet_iter != this->playerBullets.end()) && (!enemy_deleted); ) {
+//            if (enemy_iter->get()->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
+//                enemy_iter = this->enemies.erase(enemy_iter);
+//                pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
+//                enemy_deleted = true;
+//            } else {
+//                ++pl_bullet_iter;
+//            }
+//        }
+//        if (!enemy_deleted) {
+//            ++enemy_iter;
+//        }
+//    }
 }
 
 void Game::update() {
@@ -499,8 +647,22 @@ void Game::render() {
         playerBullet->render(*window);
     }
 
-    for (auto & enemy : this->enemies) {
-        enemy->render(*window);
+    for (auto & zako : this->formationZakos) {
+        if (zako) {
+            zako->render(*window);
+        }
+    }
+
+    for (auto & goei : this->formationGoeis) {
+        if (goei) {
+            goei->render(*window);
+        }
+    }
+
+    for (auto & boss : this->formationBosses) {
+        if (boss) {
+            boss->render(*window);
+        }
     }
 
     this->window->display();

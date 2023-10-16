@@ -5,6 +5,7 @@
 #include "Enemy.h"
 #include <cmath>
 #include <iostream>
+#include <utility>
 
 void Enemy::initSpawnPath(std::shared_ptr<BezierPath> & spawningPath) {
     this->setPath(spawningPath);
@@ -69,11 +70,11 @@ void Enemy::updateAttack() {
 void Enemy::updateRotation() {
     float rotationDifference = this->wantedRotation - this->sprite.getRotation();
 
-    if (rotationDifference == 0) {
+    float maxRotation = this->rotationVelocity * static_cast<float>(rotationClock.restart().asSeconds());
+
+    if ((rotationDifference > 0 ? rotationDifference : -rotationDifference) < 0.001f) {
         return;
     }
-
-    float maxRotation = this->rotationVelocity * static_cast<float>(rotationClock.restart().asSeconds());
 
     float angleToRotate;
 
@@ -192,7 +193,7 @@ void Enemy::handleFormationState() {
     this->sprite.setPosition(this->globalFormationPosition());
 }
 
-void Enemy::toDive() {
+void Enemy::toDive(bool tp) {
     this->currentState = STATES::dive;
     this->diveStartPosition = this->sprite.getPosition();
 }
@@ -220,6 +221,10 @@ Enemy::STATES & Enemy::getCurrentState() {
 
 Enemy::TYPES & Enemy::getType() {
     return this->type;
+}
+
+int & Enemy::getIndex() {
+    return this->index;
 }
 
 sf::FloatRect Enemy::getGlobalBounds() {

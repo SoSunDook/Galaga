@@ -93,7 +93,7 @@ public:
 
     void render(sf::RenderTarget & target);
 
-    void toDive();
+    void toDive(bool tp = false);
 
     bool canAttack();
 
@@ -109,6 +109,8 @@ public:
     STATES & getCurrentState();
 
     TYPES & getType();
+
+    int & getIndex();
 
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();

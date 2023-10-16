@@ -9,6 +9,7 @@ Boss::Boss(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> &
     this->healthPoints = 2;
     this->worthPoints = 150;
     this->type = TYPES::boss;
+    this->captureDive = false;
     this->spriteScale = spriteScale;
     this->velocity = velocity;
     this->rotationVelocity = enemyRotationVelocity;
@@ -38,6 +39,17 @@ void Boss::handleDiveState() {
 
 void Boss::handleDeadState() {
 
+}
+
+void Boss::toDive(bool tp) {
+    this->captureDive = tp;
+    Enemy::toDive(tp);
+
+    if (this->captureDive) {
+
+    } else {
+
+    }
 }
 
 
