@@ -9,7 +9,6 @@ Goei::Goei(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> &
     this->healthPoints = 1;
     this->worthPoints = 80;
     this->type = TYPES::goei;
-    this->escort = false;
     this->spriteScale = spriteScale;
     this->velocity = velocity;
     this->rotationVelocity = enemyRotationVelocity;
@@ -33,17 +32,12 @@ sf::Vector2<float> Goei::localFormationPosition() {
     return pos;
 }
 
-void Goei::toDive(bool tp) {
-    this->escort = tp;
-    Enemy::toDive(tp);
-}
-
 void Goei::handleDiveState() {
     if (this->currentPoint < this->currentPath->getPath().size()) {
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
         if (distance <= movement) {
             this->currentPoint++;
         } else {
@@ -51,13 +45,13 @@ void Goei::handleDiveState() {
         }
 
         if (this->currentPoint >= this->currentPath->getPath().size()) {
-            this->sprite.setPosition(this->globalFormationPosition().x, -10.f);
+            this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 100);
         }
     } else {
         sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
         if (distance > movement) {
             this->sprite.move((direction / distance) * movement);
         } else {

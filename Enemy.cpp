@@ -63,6 +63,10 @@ void Enemy::render(sf::RenderTarget & target) {
     target.draw(this->sprite);
 }
 
+void Enemy::updateDeltaTime() {
+    this->deltaTime = this->clock.restart();
+}
+
 void Enemy::updateAttack() {
 
 }
@@ -70,7 +74,7 @@ void Enemy::updateAttack() {
 void Enemy::updateRotation() {
     float rotationDifference = this->wantedRotation - this->sprite.getRotation();
 
-    float maxRotation = this->rotationVelocity * static_cast<float>(rotationClock.restart().asSeconds());
+    float maxRotation = this->rotationVelocity * this->deltaTime.asSeconds();
 
     if ((rotationDifference > 0 ? rotationDifference : -rotationDifference) < 0.001f) {
         return;
@@ -104,6 +108,7 @@ void Enemy::updateRotation() {
 }
 
 void Enemy::update() {
+    this->updateDeltaTime();
     this->updateAttack();
     this->handleStates();
     this->updateRotation();
@@ -170,7 +175,7 @@ void Enemy::handleFlyInState() {
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
         if (distance <= movement) {
             this->currentPoint++;
         } else {
@@ -180,7 +185,7 @@ void Enemy::handleFlyInState() {
         sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(moveClock.restart().asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
         if (distance > movement) {
             this->sprite.move((direction / distance) * movement);
         } else {

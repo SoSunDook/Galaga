@@ -20,5 +20,6 @@ add_executable(Galaga main.cpp
         BezierCurve.cpp
         BezierPath.cpp
         Formation.cpp
+        CaptureBeam.cpp
         pugixml.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)

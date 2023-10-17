@@ -26,6 +26,9 @@ private:
 
     std::unique_ptr<sf::RenderWindow> window;
 
+    sf::Clock clock;
+    sf::Time deltaTime;
+
     std::unique_ptr<Player> player;
     std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
 
@@ -61,26 +64,22 @@ private:
     bool spawningFinished;
     float spawningDelay;
     float spawningTimer;
-    sf::Clock spawnClock;
 
     std::shared_ptr<Enemy> divingGoei;
     bool skipFirstGoei;
     float goeiDiveDelay;
     float goeiDiveTimer;
-    sf::Clock goeiDiveClock;
 
     std::shared_ptr<Enemy> firstDivingZako;
     std::shared_ptr<Enemy> secondDivingZako;
     float zakoDiveDelay;
     float zakoDiveTimer;
-    sf::Clock zakoDiveClock;
 
     std::shared_ptr<Enemy> divingBoss;
     bool captureDive;
     bool skipFirstBoss;
     float bossDiveDelay;
     float bossDiveTimer;
-    sf::Clock bossDiveClock;
 
     void initConstants();
     void initWindow();
@@ -97,6 +96,7 @@ private:
     void handleFormation();
     void handleDiving();
 
+    void updateDeltaTime();
     void updateInput();
     void updateBullets();
     void updatePlayers();

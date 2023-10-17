@@ -5,6 +5,9 @@
 #include "Game.h"
 
 void Game::initConstants() {
+    this->clock = {};
+    this->deltaTime = {};
+
     this->playerVelocity = 1.f;
     this->bulletsVelocity = 1.f;
     this->enemyVelocity = 0.6f;
@@ -30,13 +33,11 @@ void Game::initConstants() {
     this->spawningFinished = {};
     this->spawningDelay = 0.13f;
     this->spawningTimer = 0.f;
-    this->spawnClock = {};
 
     this->divingGoei = {};
     this->skipFirstGoei = false;
     this->goeiDiveDelay = 6.f;
     this->goeiDiveTimer = 0.f;
-    this->goeiDiveClock = {};
 
     this->firstDivingZako = {};
     this->secondDivingZako = {};
@@ -49,7 +50,6 @@ void Game::initConstants() {
     this->skipFirstBoss = {};
     this->bossDiveDelay = 7.f;
     this->bossDiveTimer = 0.f;
-    this->bossDiveClock = {};
 }
 
 void Game::initWindow() {
@@ -334,6 +334,10 @@ Game::Game() {
     this->initPlayer();
 }
 
+void Game::updateDeltaTime() {
+    this->deltaTime = this->clock.restart();
+}
+
 void Game::updateInput() {
     bool left = false;
     bool right = false;
@@ -405,7 +409,7 @@ bool Game::enemyFlyinIn() {
 }
 
 void Game::handleSpawning() {
-    this->spawningTimer += this->spawnClock.restart().asSeconds();
+    this->spawningTimer += this->deltaTime.asSeconds();
     if (this->spawningTimer >= this->spawningDelay) {
         auto element = this->spawningPatterns.root().child("Level").first_child();
         bool spawned = false;
@@ -442,7 +446,7 @@ void Game::handleSpawning() {
                     } else if (type == "boss") {
 
                         auto new_enemy_boss = std::make_shared<Boss>(this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["boss"],
-                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
+                                                                     this->textureManager["beam"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationBosses.at(index) = new_enemy_boss;
                         this->currentCountBoss++;
 
@@ -486,7 +490,7 @@ void Game::handleFormation() {
 
 void Game::handleDiving() {
     if (this->divingGoei == nullptr) {
-        this->goeiDiveTimer += this->goeiDiveClock.restart().asSeconds();
+        this->goeiDiveTimer += this->deltaTime.asSeconds();
         if (this->goeiDiveTimer >= this->goeiDiveDelay) {
             bool skipped = false;
             for (int i = this->formationGoeis.size() - 1; i >= 0; --i) {
@@ -513,7 +517,7 @@ void Game::handleDiving() {
         }
     }
 
-    this->zakoDiveTimer += this->zakoDiveClock.restart().asSeconds();
+    this->zakoDiveTimer += this->deltaTime.asSeconds();
     if (this->zakoDiveTimer >= this->zakoDiveDelay) {
         for (int i = this->formationZakos.size() - 1; i >= 0; --i) {
             if (this->formationZakos[i]->getCurrentState() == Enemy::STATES::formation) {
@@ -548,7 +552,7 @@ void Game::handleDiving() {
     }
 
     if (this->divingBoss == nullptr) {
-        this->bossDiveTimer += this->bossDiveClock.restart().asSeconds();
+        this->bossDiveTimer += this->deltaTime.asSeconds();
         if (this->bossDiveTimer >= this->bossDiveDelay) {
             bool skipped = false;
             for (int i = this->formationBosses.size() - 1; i >= 0; --i) {
@@ -556,17 +560,45 @@ void Game::handleDiving() {
                     if (!this->skipFirstBoss || (this->skipFirstBoss && skipped)) {
                         this->divingBoss = this->formationBosses[i];
                         if (this->captureDive) {
+
+                            std::string path = "divezako";
+                            if (i % 2 == 1) {
+                                path.append("Mirrored");
+                            }
+                            this->divingBoss->setPath(this->pathManager->operator[](path));
+
                             this->divingBoss->toDive(true);
                         } else {
+
+                            std::string path = "divegoei";
+                            if (i % 2 == 1) {
+                                path.append("Mirrored");
+                            }
+                            this->divingBoss->setPath(this->pathManager->operator[](path));
+
                             this->divingBoss->toDive();
                             int index = this->divingBoss->getIndex();
                             int firstEscortIndex = (index % 2 == 0) ? (index * 2) : (index * 2 - 1);
                             int secondEscortIndex = firstEscortIndex + 4;
 
                             if (this->formationGoeis[firstEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
+
+                                std::string path = "divegoei";
+                                if (i % 2 == 1) {
+                                    path.append("Mirrored");
+                                }
+                                this->formationGoeis[firstEscortIndex]->setPath(this->pathManager->operator[](path));
+
                                 this->formationGoeis[firstEscortIndex]->toDive(true);
                             }
                             if (this->formationGoeis[secondEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
+
+                                std::string path = "divegoei";
+                                if (i % 2 == 1) {
+                                    path.append("Mirrored");
+                                }
+                                this->formationGoeis[secondEscortIndex]->setPath(this->pathManager->operator[](path));
+
                                 this->formationGoeis[secondEscortIndex]->toDive(true);
                             }
                         }
@@ -625,6 +657,7 @@ void Game::updateCombat() {
 }
 
 void Game::update() {
+    this->updateDeltaTime();
     this->updateInput();
     this->updatePlayers();
     this->updateBullets();

@@ -8,6 +8,7 @@ Formation::Formation() {
     this->position = {360.f, 124.f};
 
     this->clock = {};
+    this->deltaTime = {};
 
     this->offsetAmount = 20.f;
     this->offsetTimer = 0.f;
@@ -41,9 +42,15 @@ bool Formation::isLocked() {
     return this->locked && this->offsetCounter == 4;
 }
 
+void Formation::updateDeltaTime() {
+    this->deltaTime = this->clock.restart();
+}
+
 void Formation::update() {
+    this->updateDeltaTime();
+
     if ((!this->locked) || (this->offsetCounter != 4)) {
-        this->offsetTimer += this->clock.restart().asSeconds();
+        this->offsetTimer += this->deltaTime.asSeconds();
         if (this->offsetTimer >= this->offsetDelay) {
             this->offsetCounter++;
 
@@ -58,7 +65,7 @@ void Formation::update() {
             this->offsetTimer = 0.f;
         }
     } else {
-        this->spreadTimer += this->clock.restart().asSeconds();
+        this->spreadTimer += this->deltaTime.asSeconds();
         if (this->spreadTimer >= this->spreadDelay) {
             this->spreadCounter += this->spreadDirection;
 

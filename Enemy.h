@@ -35,9 +35,10 @@ protected:
 
     TYPES type{};
 
-    sf::Clock moveClock{};
+    sf::Clock clock{};
+    sf::Time deltaTime{};
+
     sf::Clock shootClock{};
-    sf::Clock rotationClock{};
 
     int spriteDivisor = 2;
     float spriteScale{};
@@ -83,6 +84,7 @@ protected:
     virtual void handleDeadState() = 0;
     void handleStates();
 
+    void updateDeltaTime();
     void updateRotation();
     void updateAttack();
 public:
@@ -93,7 +95,7 @@ public:
 
     void render(sf::RenderTarget & target);
 
-    void toDive(bool tp = false);
+    virtual void toDive(bool tp = false);
 
     bool canAttack();
 
