@@ -6,13 +6,13 @@
 #define GALAGA_FORMATION_H
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+#include <memory>
 
 class Formation {
 private:
     sf::Vector2<float> position;
 
-    sf::Clock clock;
-    sf::Time deltaTime;
+    std::shared_ptr<sf::Time> deltaTime;
 
     float offsetAmount;
     float offsetTimer;
@@ -28,10 +28,8 @@ private:
     sf::Vector2<float> gridSize;
 
     bool locked;
-
-    void updateDeltaTime();
 public:
-    Formation();
+    explicit Formation(std::shared_ptr<sf::Time> & timer);
     ~Formation() = default;
 
     sf::Vector2<float> & getPosition();

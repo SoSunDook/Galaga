@@ -35,10 +35,7 @@ protected:
 
     TYPES type{};
 
-    sf::Clock clock{};
-    sf::Time deltaTime{};
-
-    sf::Clock shootClock{};
+    std::shared_ptr<sf::Time> deltaTime{};
 
     int spriteDivisor = 2;
     float spriteScale{};
@@ -49,6 +46,7 @@ protected:
     float velocity{};
     float rotationVelocity{};
 
+    sf::Time enemyShootTimer{};
     sf::Time enemyShootCooldown{};
 
     int healthPoints{};
@@ -84,7 +82,6 @@ protected:
     virtual void handleDeadState() = 0;
     void handleStates();
 
-    void updateDeltaTime();
     void updateRotation();
     void updateAttack();
 public:

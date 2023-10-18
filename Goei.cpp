@@ -4,7 +4,7 @@
 
 #include "Goei.h"
 
-Goei::Goei(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedTexture,
+Goei::Goei(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedTexture,
            float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 1;
     this->worthPoints = 80;
@@ -15,6 +15,7 @@ Goei::Goei(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> &
     this->enemyShootCooldown = enemyShootCooldown;
     this->index = enemyIndex;
     this->currentState = STATES::flyIn;
+    this->deltaTime = timer;
     this->initSpawnPath(spawningPath);
     this->initFormation(enemyFormationPtr);
     this->initTexture(managedTexture);
@@ -37,7 +38,7 @@ void Goei::handleDiveState() {
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
         if (distance <= movement) {
             this->currentPoint++;
         } else {
@@ -45,13 +46,13 @@ void Goei::handleDiveState() {
         }
 
         if (this->currentPoint >= this->currentPath->getPath().size()) {
-            this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 100);
+            this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 200);
         }
     } else {
         sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
         if (distance > movement) {
             this->sprite.move((direction / distance) * movement);
         } else {

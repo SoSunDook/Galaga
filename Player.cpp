@@ -2,6 +2,7 @@
 // Created by SoSunDook on 25.09.2023.
 //
 
+#include <iostream>
 #include "Player.h"
 
 void Player::initTexture(std::shared_ptr<sf::Texture> & managedTexture) {
@@ -10,6 +11,7 @@ void Player::initTexture(std::shared_ptr<sf::Texture> & managedTexture) {
 
 void Player::initSprite() {
     this->sprite.setTexture(*this->texture);
+    this->sprite.setScale(this->spriteScale, this->spriteScale);
 }
 
 void Player::initOrigin() {
@@ -18,13 +20,16 @@ void Player::initOrigin() {
 
 void Player::setStartPos() {
     const float startPosX = 720.f / 2;
-    const float startPosY = 720.f - this->sprite.getLocalBounds().getSize().y;
+    const float startPosY = 720.f - (this->sprite.getGlobalBounds().getSize().y + this->sprite.getOrigin().y * this->spriteScale);
     this->sprite.setPosition(startPosX, startPosY);
 }
 
-Player::Player(std::shared_ptr<sf::Texture> & managedTexture, float & velocity, sf::Time & playerShootCooldown) {
+Player::Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedTexture, float & velocity, sf::Time & playerShootCooldown, float & spriteScale) {
     this->velocity = velocity;
     this->playerShootCooldown = playerShootCooldown;
+    this->playerShootTimer = {};
+    this->deltaTime = timer;
+    this->spriteScale = spriteScale;
     this->initTexture(managedTexture);
     this->initSprite();
     this->initOrigin();
@@ -38,8 +43,8 @@ void Player::render(sf::RenderTarget & target) {
 void Player::move(const float x, const float y) {
     auto new_x = this->velocity * x;
     auto new_y = this->velocity * y;
-    auto leftBorder = this->sprite.getOrigin().x;
-    auto rightBorder = 720.f - this->sprite.getOrigin().x;
+    auto leftBorder = this->sprite.getOrigin().x * this->spriteScale;
+    auto rightBorder = 720.f - this->sprite.getOrigin().x * this->spriteScale;
     auto currentLocX = this->sprite.getPosition().x;
     if ((currentLocX + new_x < rightBorder) && (currentLocX + new_x > leftBorder)) {
         this->sprite.move(new_x, new_y);
@@ -47,12 +52,12 @@ void Player::move(const float x, const float y) {
 }
 
 void Player::update() {
-
+    this->playerShootTimer += this->deltaTime.operator*();
 }
 
 bool Player::canAttack() {
-    if (this->clock.getElapsedTime() > this->playerShootCooldown) {
-        this->clock.restart();
+    if (this->playerShootTimer > this->playerShootCooldown) {
+        this->playerShootTimer = {};
         return true;
     }
     return false;

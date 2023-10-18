@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Boss.h"
 
-Boss::Boss(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedBossTexture,
+Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedBossTexture,
            std::shared_ptr<sf::Texture> & managedBeamTexture, float & velocity,float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 2;
     this->worthPoints = 150;
@@ -18,6 +18,7 @@ Boss::Boss(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> &
     this->enemyShootCooldown = enemyShootCooldown;
     this->index = enemyIndex;
     this->currentState = STATES::flyIn;
+    this->deltaTime = timer;
     this->initSpawnPath(spawningPath);
     this->initFormation(enemyFormationPtr);
     this->initTexture(managedBossTexture);
@@ -26,11 +27,11 @@ Boss::Boss(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> &
     this->initOrigin();
     this->initRotation();
     this->initSpawnPosition();
-    this->initCaptureBeam(managedBeamTexture);
+    this->initCaptureBeam(timer, managedBeamTexture);
 }
 
-void Boss::initCaptureBeam(std::shared_ptr<sf::Texture> & managedBeamTexture) {
-    this->captureBeam = CaptureBeam(managedBeamTexture, this->spriteScale);
+void Boss::initCaptureBeam(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedBeamTexture) {
+    this->captureBeam = CaptureBeam(timer, managedBeamTexture, this->spriteScale);
 }
 
 CaptureBeam & Boss::getCaptureBeam() {
@@ -51,7 +52,7 @@ void Boss::handleCaptureBeam() {
         sf::Vector2f direction = sf::Vector2<float>(this->sprite.getPosition().x, 740.f) - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
         if (distance > movement) {
             this->sprite.move((direction / distance) * movement);
         } else {
@@ -66,7 +67,7 @@ void Boss::handleDiveState() {
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
         if (distance <= movement) {
             this->currentPoint++;
         } else {
@@ -78,12 +79,11 @@ void Boss::handleDiveState() {
                 this->capturing = true;
                 float rotation = 180.f;
                 this->setWantedRotation(rotation);
-                this->captureBeam.resetClock();
                 auto pos_x = this->sprite.getPosition().x;
                 auto pos_y = this->sprite.getPosition().y + this->sprite.getOrigin().y * this->spriteScale + this->captureBeam.getOrigin().y * this->spriteScale;
                 this->captureBeam.setPosition(pos_x, pos_y);
             } else {
-                this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 100);
+                this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 200);
             }
         }
     } else {
@@ -91,7 +91,7 @@ void Boss::handleDiveState() {
             sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
             this->setWantedRotation(direction.x, direction.y);
             float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-            float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
+            float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
             if (distance > movement) {
                 this->sprite.move((direction / distance) * movement);
             } else {

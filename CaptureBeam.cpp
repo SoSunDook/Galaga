@@ -5,14 +5,13 @@
 #include <iostream>
 #include "CaptureBeam.h"
 
-CaptureBeam::CaptureBeam(std::shared_ptr<sf::Texture> & managedTexture, float & spriteScale) {
+CaptureBeam::CaptureBeam(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedTexture, float & spriteScale) {
     this->spriteScale = spriteScale;
     this->totalCaptureTime = 7.f;
     this->captureTimer = 0.f;
     this->animationDelay = 0.1f;
     this->animationTimer = {};
-    this->clock = {};
-    this->deltaTime = {};
+    this->deltaTime = timer;
     this->animationDone = false;
     this->currentAnimationFrame = 0;
     this->rollingDelay = 0.3f;
@@ -63,12 +62,8 @@ void CaptureBeam::resetAnimation() {
     this->currentRolling = 0;
 }
 
-void CaptureBeam::resetClock() {
-    this->clock.restart();
-}
-
 void CaptureBeam::runAnimation() {
-    this->captureTimer += this->deltaTime.asSeconds();
+    this->captureTimer += this->deltaTime->asSeconds();
     if (this->captureTimer >= this->totalCaptureTime) {
         this->animationDone = true;
         this->sprite.setPosition(0, 0);
@@ -80,7 +75,7 @@ void CaptureBeam::runAnimation() {
         sf::Vector2<int> vector(static_cast<int>(size.x) / this->spriteDivisor, frame_y * this->currentRolling);
 
         if (this->captureTimer <= 2.5f) {
-            this->rollingTimer += this->deltaTime.asSeconds();
+            this->rollingTimer += this->deltaTime->asSeconds();
             if (this->rollingTimer >= this->rollingDelay) {
                 if (this->currentRolling < 8) {
                     this->currentRolling++;
@@ -88,7 +83,7 @@ void CaptureBeam::runAnimation() {
                 this->rollingTimer = 0.f;
             }
         } else if (this->captureTimer >= this->totalCaptureTime - 2.5f) {
-            this->rollingTimer += this->deltaTime.asSeconds();
+            this->rollingTimer += this->deltaTime->asSeconds();
             if (this->rollingTimer >= this->rollingDelay) {
                 if (this->currentRolling > 0) {
                     this->currentRolling--;
@@ -97,7 +92,7 @@ void CaptureBeam::runAnimation() {
             }
         }
 
-        this->animationTimer += this->deltaTime.asSeconds();
+        this->animationTimer += this->deltaTime->asSeconds();
         if (this->animationTimer >= this->animationDelay) {
             this->currentAnimationFrame++;
             if (this->currentAnimationFrame >= this->spriteDivisor) {
@@ -119,12 +114,8 @@ sf::Vector2<float> CaptureBeam::getOrigin() {
     return this->sprite.getOrigin();
 }
 
-void CaptureBeam::updateDeltaTime() {
-    this->deltaTime = this->clock.restart();
-}
 
 void CaptureBeam::update() {
-    this->updateDeltaTime();
     if (!this->animationDone) {
         this->runAnimation();
     }

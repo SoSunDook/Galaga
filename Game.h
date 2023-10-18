@@ -27,7 +27,7 @@ private:
     std::unique_ptr<sf::RenderWindow> window;
 
     sf::Clock clock;
-    sf::Time deltaTime;
+    std::shared_ptr<sf::Time> deltaTime;
 
     std::unique_ptr<Player> player;
     std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
@@ -49,6 +49,7 @@ private:
 
     float bulletsScale;
     float enemiesScale;
+    float playersScale;
 
     int maxCountZako;
     int maxCountGoei;
@@ -81,6 +82,7 @@ private:
     float bossDiveDelay;
     float bossDiveTimer;
 
+    void initDeltaTime();
     void initConstants();
     void initWindow();
     void initTextures();

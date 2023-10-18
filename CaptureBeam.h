@@ -29,25 +29,20 @@ private:
     float rollingTimer{};
     int currentRolling{};
 
-    sf::Clock clock;
-    sf::Time deltaTime;
+    std::shared_ptr<sf::Time> deltaTime{};
 
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
     void initOrigin();
     void fixSprite();
 
-    void updateDeltaTime();
-
     void runAnimation();
 public:
     CaptureBeam() = default;
-    explicit CaptureBeam(std::shared_ptr<sf::Texture> & managedTexture, float & spriteScale);
+    explicit CaptureBeam(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedTexture, float & spriteScale);
     ~CaptureBeam() = default;
 
     void setPosition(float & pos_x, float & pos_y);
-
-    void resetClock();
 
     void resetAnimation();
 

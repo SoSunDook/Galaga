@@ -15,7 +15,7 @@ private:
 
     bool capturing;
 
-    void initCaptureBeam(std::shared_ptr<sf::Texture> & managedBeamTexture);
+    void initCaptureBeam(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedBeamTexture);
 
     sf::Vector2<float> localFormationPosition() override;
 
@@ -25,7 +25,7 @@ private:
 
     void handleDeadState() override;
 public:
-    explicit Boss(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedBossTexture,
+    explicit Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedBossTexture,
                   std::shared_ptr<sf::Texture> & managedBeamTexture, float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
     ~Boss() = default;
 

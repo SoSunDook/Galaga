@@ -4,11 +4,10 @@
 
 #include "Formation.h"
 
-Formation::Formation() {
+Formation::Formation(std::shared_ptr<sf::Time> & timer) {
     this->position = {360.f, 124.f};
 
-    this->clock = {};
-    this->deltaTime = {};
+    this->deltaTime = timer;
 
     this->offsetAmount = 20.f;
     this->offsetTimer = 0.f;
@@ -21,7 +20,7 @@ Formation::Formation() {
     this->spreadCounter = 0 ;
     this->spreadDirection = 1;
 
-    this->gridSize = {24.f, 42.f};
+    this->gridSize = {24.f, 48.f};
 
     this->locked = false;
 }
@@ -42,15 +41,9 @@ bool Formation::isLocked() {
     return this->locked && this->offsetCounter == 4;
 }
 
-void Formation::updateDeltaTime() {
-    this->deltaTime = this->clock.restart();
-}
-
 void Formation::update() {
-    this->updateDeltaTime();
-
     if ((!this->locked) || (this->offsetCounter != 4)) {
-        this->offsetTimer += this->deltaTime.asSeconds();
+        this->offsetTimer += this->deltaTime->asSeconds();
         if (this->offsetTimer >= this->offsetDelay) {
             this->offsetCounter++;
 
@@ -65,7 +58,7 @@ void Formation::update() {
             this->offsetTimer = 0.f;
         }
     } else {
-        this->spreadTimer += this->deltaTime.asSeconds();
+        this->spreadTimer += this->deltaTime->asSeconds();
         if (this->spreadTimer >= this->spreadDelay) {
             this->spreadCounter += this->spreadDirection;
 

@@ -6,7 +6,6 @@
 
 void Game::initConstants() {
     this->clock = {};
-    this->deltaTime = {};
 
     this->playerVelocity = 1.f;
     this->bulletsVelocity = 1.f;
@@ -18,6 +17,7 @@ void Game::initConstants() {
 
     this->bulletsScale = 3.f;
     this->enemiesScale = 3.f;
+    this->playersScale = 0.75f;
 
     this->maxCountZako = 20;
     this->maxCountGoei = 16;
@@ -52,6 +52,10 @@ void Game::initConstants() {
     this->bossDiveTimer = 0.f;
 }
 
+void Game::initDeltaTime() {
+    this->deltaTime = std::make_shared<sf::Time>();
+}
+
 void Game::initWindow() {
     this->window = std::make_unique<sf::RenderWindow>(sf::VideoMode(720, 720), "Galaga");
     this->window->setFramerateLimit(600);
@@ -78,7 +82,7 @@ void Game::initFormationVectors() {
 }
 
 void Game::initFormation() {
-    this->formation = std::make_shared<Formation>();
+    this->formation = std::make_shared<Formation>(this->deltaTime);
 }
 
 void Game::initSpawningPatterns() {
@@ -98,9 +102,9 @@ void Game::initPaths() {
     new_path = std::make_shared<BezierPath>();
     new_path_mirrored = std::make_shared<BezierPath>();
     p0 = {435, -75};
-    p3 = {25, 335};
-    p1 = {435, 205};
-    p2 = {25, 205};
+    p3 = {50, 335};
+    p1 = {435, 285};
+    p2 = {50, 125};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
@@ -111,10 +115,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
-    p0 = {25, 335};
+    p0 = {50, 335};
     p3 = {285, 335};
-    p1 = {25, 595};
-    p2 = {285, 595};
+    p1 = {50, 500};
+    p2 = {285, 500};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
     new_path->makePath();
@@ -132,9 +136,9 @@ void Game::initPaths() {
     new_path = std::make_shared<BezierPath>();
     new_path_mirrored = std::make_shared<BezierPath>();
     p0 = {-75, 600};
-    p3 = {285, 410};
+    p3 = {270, 410};
     p1 = {50, 600};
-    p2 = {285, 600};
+    p2 = {270, 600};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
@@ -145,10 +149,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
-    p0 = {285, 410};
+    p0 = {270, 410};
     p3 = {25, 410};
-    p1 = {285, 150};
-    p2 = {25, 150};
+    p1 = {270, 250};
+    p2 = {25, 250};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
 
@@ -160,9 +164,9 @@ void Game::initPaths() {
     new_path_mirrored->addCurve(new_curve, samples);
 
     p0 = {25, 410};
-    p3 = {285, 410};
-    p1 = {25, 670};
-    p2 = {285, 670};
+    p3 = {270, 410};
+    p1 = {25, 570};
+    p2 = {270, 570};
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
     new_path->makePath();
@@ -246,9 +250,9 @@ void Game::initPaths() {
     new_path_mirrored->addCurve(new_curve, samples);
 
     p0 = {-60, 0};
-    p3 = {280, 250};
-    p1 = {-60, 250};
-    p2 = {280, 50};
+    p3 = {180, 210};
+    p1 = {-60, 175};
+    p2 = {180, 80};
 
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
@@ -260,10 +264,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
-    p0 = {280, 250};
-    p3 = {230, 320};
-    p1 = {280, 285};
-    p2 = {230, 285};
+    p0 = {180, 210};
+    p3 = {100, 360};
+    p1 = {180, 275};
+    p2 = {100, 295};
 
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
@@ -275,10 +279,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
-    p0 = {230, 320};
-    p3 = {330, 420};
-    p1 = {230, 370};
-    p2 = {330, 370};
+    p0 = {100, 360};
+    p3 = {330, 540};
+    p1 = {100, 490};
+    p2 = {330, 410};
 
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
@@ -290,10 +294,10 @@ void Game::initPaths() {
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path_mirrored->addCurve(new_curve, samples);
 
-    p0 = {330, 420};
-    p3 = {250, 520};
-    p1 = {330, 470};
-    p2 = {250, 470};
+    p0 = {330, 540};
+    p3 = {230, 615};
+    p1 = {330, 590};
+    p2 = {230, 565};
 
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
@@ -308,15 +312,204 @@ void Game::initPaths() {
     new_path_mirrored->addCurve(new_curve, samples);
     new_path_mirrored->makePath();
     pathManager->operator[]("divegoeiMirrored") = new_path_mirrored;
+
+    new_path = std::make_shared<BezierPath>();
+    new_path_mirrored = std::make_shared<BezierPath>();
+    p0 = {0, 0};
+    p3 = {-60, 0};
+    p1 = {0, -60};
+    p2 = {-60, -60};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+
+    p0 = {-60, 0};
+    p3 = {60, 300};
+    p1 = {-60, 100};
+    p2 = {60, 200};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+
+    p0 = {60, 300};
+    p3 = {185, 300};
+    p1 = {60, 385};
+    p2 = {185, 385};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+
+    p0 = {185, 300};
+    p3 = {60, 300};
+    p1 = {185, 215};
+    p2 = {60, 215};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+
+    p0 = {60, 300};
+    p3 = {200,  670};
+    p1 = {60, 380};
+    p2 = {200, 590};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+    new_path->makePath();
+    pathManager->operator[]("diveboss") = new_path;
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+    new_path_mirrored->makePath();
+    pathManager->operator[]("divebossMirrored") = new_path_mirrored;
+
+    new_path = std::make_shared<BezierPath>();
+    new_path_mirrored = std::make_shared<BezierPath>();
+    p0 = {0, 0};
+    p3 = {-60, 0};
+    p1 = {0, -60};
+    p2 = {-60, -60};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+
+    p0 = {-60, 0};
+    p3 = {-195,  403};
+    p1 = {-60, 100};
+    p2 = {-195, 303};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+    new_path->makePath();
+    pathManager->operator[]("divebosscaptureleft") = new_path;
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+    new_path_mirrored->makePath();
+    pathManager->operator[]("divebosscaptureleftMirrored") = new_path_mirrored;
+
+    new_path = std::make_shared<BezierPath>();
+    new_path_mirrored = std::make_shared<BezierPath>();
+    p0 = {0, 0};
+    p3 = {-60, 0};
+    p1 = {0, -60};
+    p2 = {-60, -60};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+
+    p0 = {-60, 0};
+    p3 = {12,  403};
+    p1 = {-60, 100};
+    p2 = {12, 303};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+    new_path->makePath();
+    pathManager->operator[]("divebosscapturemid") = new_path;
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+    new_path_mirrored->makePath();
+    pathManager->operator[]("divebosscapturemidMirrored") = new_path_mirrored;
+
+    new_path = std::make_shared<BezierPath>();
+    new_path_mirrored = std::make_shared<BezierPath>();
+    p0 = {0, 0};
+    p3 = {-60, 0};
+    p1 = {0, -60};
+    p2 = {-60, -60};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+
+    p0 = {-60, 0};
+    p3 = {219,  403};
+    p1 = {-60, 100};
+    p2 = {219, 303};
+
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path->addCurve(new_curve, samples);
+    new_path->makePath();
+    pathManager->operator[]("divebosscaptureright") = new_path;
+
+    p0 = {-p0.x, p0.y};
+    p1 = {-p1.x, p1.y};
+    p2 = {-p2.x, p2.y};
+    p3 = {-p3.x, p3.y};
+    new_curve = BezierCurve(p0, p1, p2, p3);
+    new_path_mirrored->addCurve(new_curve, samples);
+    new_path_mirrored->makePath();
+    pathManager->operator[]("divebosscapturerightMirrored") = new_path_mirrored;
 }
 
 void Game::initPlayer() {
-    this->player = std::make_unique<Player>(this->textureManager["galaga"], this->playerVelocity, this->playerShootCooldown);
+    this->player = std::make_unique<Player>(this->deltaTime, this->textureManager["galaga"], this->playerVelocity, this->playerShootCooldown, this->playersScale);
 }
 
 std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
     auto newBullet = std::make_shared<PlayerBullet>(this->textureManager["bulletPlayer"], this->bulletsScale, this->bulletsVelocity);
-    auto pos_x = this->player->getGlobalBounds().getPosition().x + this->player->getOrigin().x;
+    auto pos_x = this->player->getGlobalBounds().getPosition().x + this->player->getOrigin().x * this->playersScale;
     auto pos_y = this->player->getGlobalBounds().getPosition().y - newBullet->getGlobalBounds().getSize().y / 2;
     newBullet->setPosition(pos_x, pos_y);
     return newBullet;
@@ -325,6 +518,7 @@ std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
 Game::Game() {
     this->dir_path = std::filesystem::current_path();
     this->initConstants();
+    this->initDeltaTime();
     this->initSpawningPatterns();
     this->initWindow();
     this->initFormationVectors();
@@ -335,35 +529,21 @@ Game::Game() {
 }
 
 void Game::updateDeltaTime() {
-    this->deltaTime = this->clock.restart();
+    *(this->deltaTime) = this->clock.restart();
 }
 
 void Game::updateInput() {
-    bool left = false;
-    bool right = false;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        left = true;
         this->player->move(-1.f, 0.f);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        right = true;
         this->player->move(1.f, 0.f);
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
         auto newBullet = this->initNewPlBullet();
         auto tmp_bvl = -this->bulletsVelocity;
-        if (left && right) {
-            auto tmp_vel = 0.f;
-            newBullet->setDirection(tmp_vel, tmp_bvl);
-        } else if (left) {
-            auto tmp_vel = -this->playerVelocity;
-            newBullet->setDirection(tmp_vel, tmp_bvl);
-        } else if (right) {
-            newBullet->setDirection(this->playerVelocity, tmp_bvl);
-        } else {
-            auto tmp_vel = 0.f;
-            newBullet->setDirection(tmp_vel, tmp_bvl);
-        }
+        auto tmp_vel = 0.f;
+        newBullet->setDirection(tmp_vel, tmp_bvl);
         this->playerBullets.push_back(newBullet);
     }
 }
@@ -409,7 +589,7 @@ bool Game::enemyFlyingIn() {
 }
 
 void Game::handleSpawning() {
-    this->spawningTimer += this->deltaTime.asSeconds();
+    this->spawningTimer += this->deltaTime->asSeconds();
     if (this->spawningTimer >= this->spawningDelay) {
         auto element = this->spawningPatterns.root().child("Level").first_child();
         bool spawned = false;
@@ -431,21 +611,21 @@ void Game::handleSpawning() {
 
                     if (type == "zako") {
 
-                        auto new_enemy_zako = std::make_shared<Zako>(this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["zako"],
+                        auto new_enemy_zako = std::make_shared<Zako>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["zako"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationZakos.at(index) = new_enemy_zako;
                         this->currentCountZako++;
 
                     } else if (type == "goei") {
 
-                        auto new_enemy_goei = std::make_shared<Goei>(this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["goei"],
+                        auto new_enemy_goei = std::make_shared<Goei>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["goei"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationGoeis.at(index) = new_enemy_goei;
                         this->currentCountGoei++;
 
                     } else if (type == "boss") {
 
-                        auto new_enemy_boss = std::make_shared<Boss>(this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["boss"],
+                        auto new_enemy_boss = std::make_shared<Boss>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["boss"],
                                                                      this->textureManager["beam"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationBosses.at(index) = new_enemy_boss;
                         this->currentCountBoss++;
@@ -490,7 +670,7 @@ void Game::handleFormation() {
 
 void Game::handleDiving() {
     if (this->divingGoei == nullptr) {
-        this->goeiDiveTimer += this->deltaTime.asSeconds();
+        this->goeiDiveTimer += this->deltaTime->asSeconds();
         if (this->goeiDiveTimer >= this->goeiDiveDelay) {
             bool skipped = false;
             for (int i = this->formationGoeis.size() - 1; i >= 0; --i) {
@@ -517,7 +697,7 @@ void Game::handleDiving() {
         }
     }
 
-    this->zakoDiveTimer += this->deltaTime.asSeconds();
+    this->zakoDiveTimer += this->deltaTime->asSeconds();
     if (this->zakoDiveTimer >= this->zakoDiveDelay) {
         for (int i = this->formationZakos.size() - 1; i >= 0; --i) {
             if (this->formationZakos[i]->getCurrentState() == Enemy::STATES::formation) {
@@ -552,7 +732,7 @@ void Game::handleDiving() {
     }
 
     if (this->divingBoss == nullptr) {
-        this->bossDiveTimer += this->deltaTime.asSeconds();
+        this->bossDiveTimer += this->deltaTime->asSeconds();
         if (this->bossDiveTimer >= this->bossDiveDelay) {
             bool skipped = false;
             for (int i = this->formationBosses.size() - 1; i >= 0; --i) {
@@ -561,21 +741,39 @@ void Game::handleDiving() {
                         this->divingBoss = this->formationBosses[i];
                         if (this->captureDive) {
 
-                            std::string path = "divezako";
+                            std::string path = "divebosscapture";
+
+                            srand(time (nullptr));
+                            auto choose = rand() % 3;
+                            switch (choose) {
+                                case 0:
+                                    path.append("left");
+                                    break;
+                                case 1:
+                                    path.append("mid");
+                                    break;
+                                case 2:
+                                    path.append("right");
+                                    break;
+                                default:
+                                    path.append("mid");
+                                    break;
+                            }
+
                             if (i % 2 == 1) {
                                 path.append("Mirrored");
                             }
-                            this->divingBoss->setPath(this->pathManager->operator[](path));
 
+                            this->divingBoss->setPath(this->pathManager->operator[](path));
                             this->divingBoss->toDive(true);
                         } else {
 
-                            std::string path = "divegoei";
+                            std::string path = "diveboss";
                             if (i % 2 == 1) {
                                 path.append("Mirrored");
                             }
-                            this->divingBoss->setPath(this->pathManager->operator[](path));
 
+                            this->divingBoss->setPath(this->pathManager->operator[](path));
                             this->divingBoss->toDive();
                             int index = this->divingBoss->getIndex();
                             int firstEscortIndex = (index % 2 == 0) ? (index * 2) : (index * 2 - 1);
@@ -583,22 +781,22 @@ void Game::handleDiving() {
 
                             if (this->formationGoeis[firstEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
 
-                                std::string path = "divegoei";
+                                std::string path = "diveboss";
                                 if (i % 2 == 1) {
                                     path.append("Mirrored");
                                 }
-                                this->formationGoeis[firstEscortIndex]->setPath(this->pathManager->operator[](path));
 
+                                this->formationGoeis[firstEscortIndex]->setPath(this->pathManager->operator[](path));
                                 this->formationGoeis[firstEscortIndex]->toDive(true);
                             }
                             if (this->formationGoeis[secondEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
 
-                                std::string path = "divegoei";
+                                std::string path = "diveboss";
                                 if (i % 2 == 1) {
                                     path.append("Mirrored");
                                 }
-                                this->formationGoeis[secondEscortIndex]->setPath(this->pathManager->operator[](path));
 
+                                this->formationGoeis[secondEscortIndex]->setPath(this->pathManager->operator[](path));
                                 this->formationGoeis[secondEscortIndex]->toDive(true);
                             }
                         }

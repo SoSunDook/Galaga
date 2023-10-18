@@ -61,20 +61,38 @@ void Enemy::initOrigin() {
 
 void Enemy::render(sf::RenderTarget & target) {
     target.draw(this->sprite);
-}
 
-void Enemy::updateDeltaTime() {
-    this->deltaTime = this->clock.restart();
+// For debug only
+//    if (this->currentPath && this->currentPoint != this->currentPath->getPath().size()) {
+//        for (auto i = 0; i < this->currentPath->getPath().size() - 2; ++i) {
+//            if (this->diveStartPosition != sf::Vector2f{}) {
+//                sf::Vertex line[] =
+//                {
+//                    sf::Vertex(this->diveStartPosition + this->currentPath->getPath()[i]),
+//                    sf::Vertex(this->diveStartPosition + this->currentPath->getPath()[i + 1])
+//                };
+//                target.draw(line, 2, sf::Lines);
+//            } else {
+//                sf::Vertex line[] =
+//                {
+//                    sf::Vertex(this->currentPath->getPath()[i]),
+//                    sf::Vertex(this->currentPath->getPath()[i + 1])
+//                };
+//                target.draw(line, 2, sf::Lines);
+//            }
+//        }
+//    }
+//
 }
 
 void Enemy::updateAttack() {
-
+    this->enemyShootTimer += this->deltaTime.operator*();
 }
 
 void Enemy::updateRotation() {
     float rotationDifference = this->wantedRotation - this->sprite.getRotation();
 
-    float maxRotation = this->rotationVelocity * this->deltaTime.asSeconds();
+    float maxRotation = this->rotationVelocity * this->deltaTime->asSeconds();
 
     if ((rotationDifference > 0 ? rotationDifference : -rotationDifference) < 0.001f) {
         return;
@@ -108,15 +126,14 @@ void Enemy::updateRotation() {
 }
 
 void Enemy::update() {
-    this->updateDeltaTime();
     this->updateAttack();
     this->handleStates();
     this->updateRotation();
 }
 
 bool Enemy::canAttack() {
-    if (this->shootClock.getElapsedTime() > this->enemyShootCooldown) {
-        this->shootClock.restart();
+    if (this->enemyShootTimer > this->enemyShootCooldown) {
+        this->enemyShootTimer = {};
         return true;
     }
     return false;
@@ -175,7 +192,7 @@ void Enemy::handleFlyInState() {
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
         if (distance <= movement) {
             this->currentPoint++;
         } else {
@@ -185,7 +202,7 @@ void Enemy::handleFlyInState() {
         sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(this->deltaTime.asMilliseconds());
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
         if (distance > movement) {
             this->sprite.move((direction / distance) * movement);
         } else {
