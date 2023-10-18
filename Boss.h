@@ -9,7 +9,7 @@
 
 class Boss : public Enemy {
 private:
-    std::unique_ptr<CaptureBeam> captureBeam;
+    CaptureBeam captureBeam;
 
     bool captureDive;
 
@@ -24,12 +24,16 @@ private:
     void handleDiveState() override;
 
     void handleDeadState() override;
-
-    void toDive(bool tp = false) override;
 public:
     explicit Boss(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedBossTexture,
                   std::shared_ptr<sf::Texture> & managedBeamTexture, float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
     ~Boss() = default;
+
+    void toDive(bool tp = false) override;
+
+    CaptureBeam & getCaptureBeam();
+
+    virtual void render(sf::RenderTarget & target) override;
 };
 
 

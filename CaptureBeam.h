@@ -14,12 +14,20 @@ private:
     sf::Sprite sprite;
 
     int spriteDivisor = 3;
-    float spriteScale;
+    float spriteScale{};
 
-    bool animationDone;
+    bool animationDone{};
 
-    float totalCaptureTime;
-    float captureTimer;
+    float totalCaptureTime{};
+    float captureTimer{};
+
+    float animationDelay{};
+    float animationTimer{};
+    int currentAnimationFrame{};
+//    Rolling
+    float rollingDelay{};
+    float rollingTimer{};
+    int currentRolling{};
 
     sf::Clock clock;
     sf::Time deltaTime;
@@ -27,11 +35,13 @@ private:
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
     void initOrigin();
+    void fixSprite();
 
     void updateDeltaTime();
 
     void runAnimation();
 public:
+    CaptureBeam() = default;
     explicit CaptureBeam(std::shared_ptr<sf::Texture> & managedTexture, float & spriteScale);
     ~CaptureBeam() = default;
 
@@ -42,6 +52,8 @@ public:
     void resetAnimation();
 
     bool & finishedAnimation();
+
+    sf::Vector2<float> getOrigin();
 
     void update();
 

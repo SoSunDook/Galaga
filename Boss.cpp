@@ -30,7 +30,11 @@ Boss::Boss(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> &
 }
 
 void Boss::initCaptureBeam(std::shared_ptr<sf::Texture> & managedBeamTexture) {
-    this->captureBeam = std::make_unique<CaptureBeam>(managedBeamTexture, this->spriteScale);
+    this->captureBeam = CaptureBeam(managedBeamTexture, this->spriteScale);
+}
+
+CaptureBeam & Boss::getCaptureBeam() {
+    return this->captureBeam;
 }
 
 sf::Vector2<float> Boss::localFormationPosition() {
@@ -41,9 +45,9 @@ sf::Vector2<float> Boss::localFormationPosition() {
 }
 
 void Boss::handleCaptureBeam() {
-    this->captureBeam->update();
+    this->captureBeam.update();
 
-    if (this->captureBeam->finishedAnimation()) {
+    if (this->captureBeam.finishedAnimation()) {
         sf::Vector2f direction = sf::Vector2<float>(this->sprite.getPosition().x, 740.f) - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
@@ -74,7 +78,10 @@ void Boss::handleDiveState() {
                 this->capturing = true;
                 float rotation = 180.f;
                 this->setWantedRotation(rotation);
-                this->captureBeam->resetClock();
+                this->captureBeam.resetClock();
+                auto pos_x = this->sprite.getPosition().x;
+                auto pos_y = this->sprite.getPosition().y + this->sprite.getOrigin().y * this->spriteScale + this->captureBeam.getOrigin().y * this->spriteScale;
+                this->captureBeam.setPosition(pos_x, pos_y);
             } else {
                 this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 100);
             }
@@ -106,7 +113,14 @@ void Boss::toDive(bool tp) {
 
     if (this->captureDive) {
         this->capturing = false;
-        this->captureBeam->resetAnimation();
+        this->captureBeam.resetAnimation();
+    }
+}
+
+void Boss::render(sf::RenderTarget &target) {
+    Enemy::render(target);
+    if (this->capturing && !this->captureBeam.finishedAnimation()) {
+        this->captureBeam.render(target);
     }
 }
 

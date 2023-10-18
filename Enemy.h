@@ -93,7 +93,7 @@ public:
 
     void update();
 
-    void render(sf::RenderTarget & target);
+    virtual void render(sf::RenderTarget & target);
 
     virtual void toDive(bool tp = false);
 

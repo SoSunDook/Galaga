@@ -32,9 +32,9 @@ private:
     std::unique_ptr<Player> player;
     std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
 
-    std::vector<std::shared_ptr<Enemy>> formationZakos;
-    std::vector<std::shared_ptr<Enemy>> formationGoeis;
-    std::vector<std::shared_ptr<Enemy>> formationBosses;
+    std::vector<std::shared_ptr<Zako>> formationZakos;
+    std::vector<std::shared_ptr<Goei>> formationGoeis;
+    std::vector<std::shared_ptr<Boss>> formationBosses;
 //    std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
 
     std::shared_ptr<Formation> formation;
@@ -65,17 +65,17 @@ private:
     float spawningDelay;
     float spawningTimer;
 
-    std::shared_ptr<Enemy> divingGoei;
+    std::shared_ptr<Goei> divingGoei;
     bool skipFirstGoei;
     float goeiDiveDelay;
     float goeiDiveTimer;
 
-    std::shared_ptr<Enemy> firstDivingZako;
-    std::shared_ptr<Enemy> secondDivingZako;
+    std::shared_ptr<Zako> firstDivingZako;
+    std::shared_ptr<Zako> secondDivingZako;
     float zakoDiveDelay;
     float zakoDiveTimer;
 
-    std::shared_ptr<Enemy> divingBoss;
+    std::shared_ptr<Boss> divingBoss;
     bool captureDive;
     bool skipFirstBoss;
     float bossDiveDelay;
@@ -91,7 +91,7 @@ private:
     void initPlayer();
     std::shared_ptr<PlayerBullet> initNewPlBullet();
 
-    bool enemyFlyinIn();
+    bool enemyFlyingIn();
     void handleSpawning();
     void handleFormation();
     void handleDiving();

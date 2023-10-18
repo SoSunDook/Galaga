@@ -386,7 +386,7 @@ void Game::updatePlayers() {
     this->player->update();
 }
 
-bool Game::enemyFlyinIn() {
+bool Game::enemyFlyingIn() {
     for (auto & zako : this->formationZakos) {
         if (zako && zako->getCurrentState() == Enemy::STATES::flyIn) {
             return true;
@@ -462,7 +462,7 @@ void Game::handleSpawning() {
             this->spawningFinished = true;
         } else {
             if (!spawned) {
-                if (!this->enemyFlyinIn()) {
+                if (!this->enemyFlyingIn()) {
                     this->currentFlyInPriority++;
                     this->currentFlyInIndex = 0;
                 }
@@ -479,7 +479,7 @@ void Game::handleFormation() {
 
     if (!this->formation->isLocked()) {
         if (currentCountZako == maxCountZako && currentCountGoei == maxCountGoei && currentCountBoss == maxCountBoss) {
-            if (!this->enemyFlyinIn()) {
+            if (!this->enemyFlyingIn()) {
                 this->formation->lock();
             }
         }
@@ -513,7 +513,7 @@ void Game::handleDiving() {
         }
     } else {
         if (this->divingGoei->getCurrentState() != Enemy::STATES::dive) {
-            this->divingGoei = std::shared_ptr<Enemy>();
+            this->divingGoei = {};
         }
     }
 
@@ -674,27 +674,27 @@ void Game::update() {
 void Game::render() {
     this->window->clear();
 
-    this->player->render(*window);
+    this->player->render(*this->window);
 
     for (auto & playerBullet : this->playerBullets) {
-        playerBullet->render(*window);
+        playerBullet->render(*this->window);
     }
 
     for (auto & zako : this->formationZakos) {
         if (zako) {
-            zako->render(*window);
+            zako->render(*this->window);
         }
     }
 
     for (auto & goei : this->formationGoeis) {
         if (goei) {
-            goei->render(*window);
+            goei->render(*this->window);
         }
     }
 
     for (auto & boss : this->formationBosses) {
         if (boss) {
-            boss->render(*window);
+            boss->render(*this->window);
         }
     }
 
@@ -704,9 +704,9 @@ void Game::render() {
 void Game::run() {
     while (this->window->isOpen()) {
         sf::Event event{};
-        while (window->pollEvent(event)) {
+        while (this->window->pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
-                window->close();
+                this->window->close();
             }
         }
         this->update();
