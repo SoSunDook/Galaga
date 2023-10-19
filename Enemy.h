@@ -29,6 +29,8 @@ protected:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
 
+    std::shared_ptr<sf::Texture> deathTexture;
+
     std::shared_ptr<Formation> formationPtr;
 
     std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> paths;
@@ -40,6 +42,8 @@ protected:
     int spriteDivisor = 2;
     float spriteScale{};
 
+    int deathSpriteDivisor = 4;
+
     std::shared_ptr<BezierPath> currentPath;
     unsigned currentPoint{};
 
@@ -48,6 +52,12 @@ protected:
 
     sf::Time enemyShootTimer{};
     sf::Time enemyShootCooldown{};
+
+    float deathAnimationTimer{};
+    float deathAnimationDelay = 0.1f;
+    int currentDeathAnimationFrame{};
+
+    bool deathAnimationDone{};
 
     int healthPoints{};
     int worthPoints{};
@@ -76,10 +86,12 @@ protected:
 
     void flyInComplete();
 
+    void runDeathAnimation();
+
     void handleFlyInState();
     void handleFormationState();
     virtual void handleDiveState() = 0;
-    virtual void handleDeadState() = 0;
+    virtual void handleDeadState();
     void handleStates();
 
     void updateRotation();
@@ -93,6 +105,8 @@ public:
     virtual void render(sf::RenderTarget & target);
 
     virtual void toDive(bool tp = false);
+
+    virtual void hit();
 
     bool canAttack();
 

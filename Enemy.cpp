@@ -47,7 +47,6 @@ void Enemy::initSpawnPosition() {
 void Enemy::initSprite() {
     this->sprite.setTexture(*this->texture);
     this->sprite.setScale(this->spriteScale, this->spriteScale);
-//    Animation startup
     auto size = this->texture->getSize();
     sf::Vector2<int> point(static_cast<int>(size.x) / this->spriteDivisor, 0);
     sf::Vector2<int> vector(static_cast<int>(size.x) / this->spriteDivisor, static_cast<int>(size.y));
@@ -187,6 +186,31 @@ void Enemy::flyInComplete() {
     this->joinFormation();
 }
 
+void Enemy::runDeathAnimation() {
+    if (!this->deathAnimationDone) {
+        this->deathAnimationTimer += this->deltaTime->asSeconds();
+        if (this->deathAnimationTimer >= this->deathAnimationDelay) {
+            auto size = this->deathTexture->getSize();
+            auto frame_x = static_cast<int>(size.x) / this->deathSpriteDivisor;
+            sf::Vector2<int> point(frame_x * this->currentDeathAnimationFrame, 0);
+            sf::Vector2<int> vector(static_cast<int>(size.x) / this->deathSpriteDivisor, static_cast<int>(size.y));
+            const sf::Rect<int> rectangle(point, vector);
+            this->sprite.setTextureRect(rectangle);
+            if (this->currentDeathAnimationFrame < this->deathSpriteDivisor) {
+                this->currentDeathAnimationFrame++;
+                this->deathAnimationTimer = 0.f;
+            } else {
+                this->deathAnimationDone = true;
+
+                sf::Vector2<int> point(0, 0);
+                sf::Vector2<int> vector(0, 0);
+                const sf::Rect<int> rectangle(point, vector);
+                this->sprite.setTextureRect(rectangle);
+            }
+        }
+    }
+}
+
 void Enemy::handleFlyInState() {
     if (this->currentPoint < this->currentPath->getPath().size()) {
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) - this->sprite.getPosition();
@@ -215,9 +239,33 @@ void Enemy::handleFormationState() {
     this->sprite.setPosition(this->globalFormationPosition());
 }
 
+void Enemy::handleDeadState() {
+    this->runDeathAnimation();
+}
+
 void Enemy::toDive(bool tp) {
     this->currentState = STATES::dive;
     this->diveStartPosition = this->sprite.getPosition();
+}
+
+void Enemy::hit() {
+    this->healthPoints--;
+    if (this->healthPoints <= 0) {
+        this->currentState = STATES::dead;
+
+        this->deathAnimationDone = false;
+        this->sprite.setTexture(*this->deathTexture);
+        this->sprite.setScale(2, 2);
+        auto size = this->deathTexture->getSize();
+        sf::Vector2<int> point(0, 0);
+        sf::Vector2<int> vector(static_cast<int>(size.x) / this->deathSpriteDivisor, static_cast<int>(size.y));
+        const sf::Rect<int> rectangle(point, vector);
+        this->sprite.setTextureRect(rectangle);
+        this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
+        float zeroRotation = 0;
+        this->sprite.setRotation(zeroRotation);
+        this->setWantedRotation(zeroRotation);
+    }
 }
 
 void Enemy::handleStates() {

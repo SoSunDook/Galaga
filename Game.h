@@ -59,6 +59,10 @@ private:
     int currentCountGoei;
     int currentCountBoss;
 
+    int aliveCountZako;
+    int aliveCountGoei;
+    int aliveCountBoss;
+
     int currentFlyInPriority;
     int currentFlyInIndex;
 
@@ -97,6 +101,9 @@ private:
     void handleSpawning();
     void handleFormation();
     void handleDiving();
+
+    void handlePVE();
+    void handleEVP();
 
     void updateDeltaTime();
     void updateInput();

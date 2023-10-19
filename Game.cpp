@@ -27,6 +27,10 @@ void Game::initConstants() {
     this->currentCountGoei = {};
     this->currentCountBoss = {};
 
+    this->aliveCountZako = {};
+    this->aliveCountGoei = {};
+    this->aliveCountBoss = {};
+
     this->currentFlyInPriority = {};
     this->currentFlyInIndex = {};
 
@@ -611,24 +615,30 @@ void Game::handleSpawning() {
 
                     if (type == "zako") {
 
-                        auto new_enemy_zako = std::make_shared<Zako>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["zako"],
+                        auto new_enemy_zako = std::make_shared<Zako>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation,
+                                                                     this->textureManager["explosion"], this->textureManager["zako"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationZakos.at(index) = new_enemy_zako;
                         this->currentCountZako++;
+                        this->aliveCountZako++;
 
                     } else if (type == "goei") {
 
-                        auto new_enemy_goei = std::make_shared<Goei>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["goei"],
+                        auto new_enemy_goei = std::make_shared<Goei>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation,
+                                                                     this->textureManager["explosion"], this->textureManager["goei"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationGoeis.at(index) = new_enemy_goei;
                         this->currentCountGoei++;
+                        this->aliveCountGoei++;
 
                     } else if (type == "boss") {
 
-                        auto new_enemy_boss = std::make_shared<Boss>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation, this->textureManager["boss"],
-                                                                     this->textureManager["beam"], this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
+                        auto new_enemy_boss = std::make_shared<Boss>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation,
+                                                                     this->textureManager["explosion"], this->textureManager["boss"], this->textureManager["boss2"], this->textureManager["beam"],
+                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationBosses.at(index) = new_enemy_boss;
                         this->currentCountBoss++;
+                        this->aliveCountBoss++;
 
                     }
 
@@ -672,7 +682,12 @@ void Game::handleDiving() {
     if (this->divingGoei == nullptr) {
         this->goeiDiveTimer += this->deltaTime->asSeconds();
         if (this->goeiDiveTimer >= this->goeiDiveDelay) {
-            bool skipped = false;
+            bool skipped;
+            if (this->aliveCountGoei <= 1) {
+                skipped = true;
+            } else {
+                skipped = false;
+            }
             for (int i = this->formationGoeis.size() - 1; i >= 0; --i) {
                 if (this->formationGoeis[i]->getCurrentState() == Enemy::STATES::formation) {
                     if (!this->skipFirstGoei || (this->skipFirstGoei && skipped)) {
@@ -734,7 +749,12 @@ void Game::handleDiving() {
     if (this->divingBoss == nullptr) {
         this->bossDiveTimer += this->deltaTime->asSeconds();
         if (this->bossDiveTimer >= this->bossDiveDelay) {
-            bool skipped = false;
+            bool skipped;
+            if (this->aliveCountBoss <= 1) {
+                skipped = true;
+            } else {
+                skipped = false;
+            }
             for (int i = this->formationBosses.size() - 1; i >= 0; --i) {
                 if (this->formationBosses[i]->getCurrentState() == Enemy::STATES::formation) {
                     if (!this->skipFirstBoss || (this->skipFirstBoss && skipped)) {
@@ -816,6 +836,79 @@ void Game::handleDiving() {
     }
 }
 
+void Game::handlePVE() {
+    for (auto pl_bullet_iter = this->playerBullets.begin(); pl_bullet_iter != this->playerBullets.end(); ) {
+        bool bullet_deleted = false;
+        for (auto zako_iter = this->formationZakos.begin(); (zako_iter != this->formationZakos.end()) && (!bullet_deleted); ) {
+            if (*zako_iter) {
+                if (zako_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (zako_iter->get()->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
+                        pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
+                        zako_iter->get()->hit();
+                        if (zako_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            this->aliveCountZako--;
+                        }
+                        bullet_deleted = true;
+                        break;
+                    } else {
+                        ++zako_iter;
+                    }
+                } else {
+                    ++zako_iter;
+                }
+            } else {
+                ++zako_iter;
+            }
+        }
+        for (auto goei_iter = this->formationGoeis.begin(); (goei_iter != this->formationGoeis.end()) && (!bullet_deleted); ) {
+            if (*goei_iter) {
+                if (goei_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (goei_iter->get()->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
+                        pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
+                        goei_iter->get()->hit();
+                        if (goei_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            this->aliveCountGoei--;
+                        }
+                        bullet_deleted = true;
+                        break;
+                    } else {
+                        ++goei_iter;
+                    }
+                } else {
+                    ++goei_iter;
+                }
+            } else {
+                ++goei_iter;
+            }
+        }
+        for (auto boss_iter = this->formationBosses.begin(); (boss_iter != this->formationBosses.end()) && (!bullet_deleted); ) {
+            if (*boss_iter) {
+                if (boss_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (boss_iter->get()->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
+                        pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
+                        boss_iter->get()->hit();
+                        if (boss_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            this->aliveCountBoss--;
+                        }
+                        bullet_deleted = true;
+                        break;
+                    } else {
+                        ++boss_iter;
+                    }
+                } else {
+                    ++boss_iter;
+                }
+            } else {
+                ++boss_iter;
+            }
+        }
+
+        if (!bullet_deleted) {
+            ++pl_bullet_iter;
+        }
+    }
+}
+
 void Game::updateEnemies() {
     for (auto & zako : this->formationZakos) {
         if (zako) {
@@ -837,21 +930,8 @@ void Game::updateEnemies() {
 }
 
 void Game::updateCombat() {
-//    for (auto enemy_iter = this->enemies.begin(); enemy_iter != this->enemies.end(); ) {
-//        bool enemy_deleted = false;
-//        for (auto pl_bullet_iter = this->playerBullets.begin(); (pl_bullet_iter != this->playerBullets.end()) && (!enemy_deleted); ) {
-//            if (enemy_iter->get()->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
-//                enemy_iter = this->enemies.erase(enemy_iter);
-//                pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
-//                enemy_deleted = true;
-//            } else {
-//                ++pl_bullet_iter;
-//            }
-//        }
-//        if (!enemy_deleted) {
-//            ++enemy_iter;
-//        }
-//    }
+    this->handlePVE();
+    this->handlePVE();
 }
 
 void Game::update() {

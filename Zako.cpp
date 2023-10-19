@@ -4,7 +4,8 @@
 
 #include "Zako.h"
 
-Zako::Zako(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedTexture,
+Zako::Zako(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
+           std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture,
            float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 1;
     this->worthPoints = 50;
@@ -19,6 +20,7 @@ Zako::Zako(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::stri
     this->initSpawnPath(spawningPath);
     this->initFormation(enemyFormationPtr);
     this->initTexture(managedTexture);
+    this->deathTexture = managedDeathTexture;
     this->initPaths(managedPaths);
     this->initSprite();
     this->initOrigin();
@@ -57,7 +59,7 @@ void Zako::handleDiveState() {
     }
 }
 
-void Zako::handleDeadState() {
-
-}
+//void Zako::handleDeadState() {
+//
+//}
 

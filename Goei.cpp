@@ -4,7 +4,8 @@
 
 #include "Goei.h"
 
-Goei::Goei(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedTexture,
+Goei::Goei(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
+           std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture,
            float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 1;
     this->worthPoints = 80;
@@ -19,6 +20,7 @@ Goei::Goei(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::stri
     this->initSpawnPath(spawningPath);
     this->initFormation(enemyFormationPtr);
     this->initTexture(managedTexture);
+    this->deathTexture = managedDeathTexture;
     this->initPaths(managedPaths);
     this->initSprite();
     this->initOrigin();
@@ -61,6 +63,6 @@ void Goei::handleDiveState() {
     }
 }
 
-void Goei::handleDeadState() {
-
-}
+//void Goei::handleDeadState() {
+//
+//}

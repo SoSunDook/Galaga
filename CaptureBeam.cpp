@@ -106,6 +106,39 @@ void CaptureBeam::runAnimation() {
     }
 }
 
+void CaptureBeam::endAnimation() {
+    if (this->currentRolling != 0) {
+        auto size = this->texture->getSize();
+        auto frame_x = static_cast<int>(size.x) / this->spriteDivisor;
+        auto frame_y = static_cast<int>(size.y) / 8;
+        sf::Vector2<int> point(frame_x * this->currentAnimationFrame, 0);
+        sf::Vector2<int> vector(static_cast<int>(size.x) / this->spriteDivisor, frame_y * this->currentRolling);
+
+        this->rollingTimer += this->deltaTime->asSeconds();
+        if (this->rollingTimer >= (this->rollingDelay) / 6) {
+            if (this->currentRolling > 0) {
+                this->currentRolling--;
+            }
+            this->rollingTimer = 0.f;
+        }
+
+        this->animationTimer += this->deltaTime->asSeconds();
+        if (this->animationTimer >= this->animationDelay) {
+            this->currentAnimationFrame++;
+            if (this->currentAnimationFrame >= this->spriteDivisor) {
+                this->currentAnimationFrame = 0;
+            }
+            this->animationTimer = 0.f;
+        }
+
+        const sf::Rect<int> rectangle(point, vector);
+        this->sprite.setTextureRect(rectangle);
+    } else {
+        this->animationDone = true;
+        this->sprite.setPosition(0, 0);
+    }
+}
+
 bool & CaptureBeam::finishedAnimation() {
     return this->animationDone;
 }

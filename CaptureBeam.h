@@ -48,6 +48,8 @@ public:
 
     bool & finishedAnimation();
 
+    void endAnimation();
+
     sf::Vector2<float> getOrigin();
 
     void update();

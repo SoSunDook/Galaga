@@ -5,8 +5,9 @@
 #include <iostream>
 #include "Boss.h"
 
-Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<sf::Texture> & managedBossTexture,
-           std::shared_ptr<sf::Texture> & managedBeamTexture, float & velocity,float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
+Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
+           std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedBossTexture, std::shared_ptr<sf::Texture> & managedBossHitTexture, std::shared_ptr<sf::Texture> & managedBeamTexture,
+           float & velocity,float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 2;
     this->worthPoints = 150;
     this->type = TYPES::boss;
@@ -22,6 +23,8 @@ Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::stri
     this->initSpawnPath(spawningPath);
     this->initFormation(enemyFormationPtr);
     this->initTexture(managedBossTexture);
+    this->deathTexture = managedDeathTexture;
+    this->hitTexture = managedBossHitTexture;
     this->initPaths(managedPaths);
     this->initSprite();
     this->initOrigin();
@@ -103,8 +106,25 @@ void Boss::handleDiveState() {
     }
 }
 
-void Boss::handleDeadState() {
+void Boss::hit() {
+    Enemy::hit();
+    if (this->healthPoints == 1) {
+        this->sprite.setTexture(*this->hitTexture);
+        this->sprite.setScale(this->spriteScale, this->spriteScale);
+        auto size = this->hitTexture->getSize();
+        sf::Vector2<int> point(static_cast<int>(size.x) / this->spriteDivisor, 0);
+        sf::Vector2<int> vector(static_cast<int>(size.x) / this->spriteDivisor, static_cast<int>(size.y));
+        const sf::Rect<int> rectangle(point, vector);
+        this->sprite.setTextureRect(rectangle);
+        this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
+    }
+}
 
+void Boss::handleDeadState() {
+    Enemy::handleDeadState();
+    if (!this->captureBeam.finishedAnimation()) {
+        this->captureBeam.endAnimation();
+    }
 }
 
 void Boss::toDive(bool tp) {
