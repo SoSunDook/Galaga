@@ -9,11 +9,19 @@
 #include <memory>
 
 class Player {
+public:
+    enum STATES {
+        alive,
+        hit,
+        dead
+    };
 private:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
 
     float spriteScale;
+
+    std::shared_ptr<sf::Texture> deathTexture;
 
     std::shared_ptr<sf::Time> deltaTime;
 
@@ -22,22 +30,49 @@ private:
 
     float velocity;
 
+    int healthPoints;
+
+    STATES currentState;
+
+    int deathSpriteDivisor = 4;
+    float deathAnimationTimer;
+    float deathAnimationDelay;
+    int currentDeathAnimationFrame;
+
+    bool deathAnimationDone;
+
+    bool doubledPlayer;
+
+    void runDeathAnimation();
+
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
     void initOrigin();
     void setStartPos();
 public:
-    explicit Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedTexture, float & velocity, sf::Time & playerShootCooldown, float & spriteScale);
+    explicit Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture,
+                    float & velocity, sf::Time & playerShootCooldown, float & spriteScale);
     ~Player() = default;
 
-    void update();
+    void die();
+    void toGetHit();
 
-    void render(sf::RenderTarget & target);
+    void respawn();
 
     void move(const float x, const float y);
 
     bool canAttack();
 
+    void handleHitState();
+    void handleDeadState();
+    void handleStates();
+
+    void update();
+
+    void render(sf::RenderTarget & target);
+
+    int & getHealth();
+    STATES & getCurrentState();
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();
     sf::Vector2<float> getOrigin();

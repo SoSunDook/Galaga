@@ -19,10 +19,6 @@ void Enemy::initTexture(std::shared_ptr<sf::Texture> & managedTexture) {
     this->texture = managedTexture;
 }
 
-void Enemy::initPaths(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths) {
-    this->paths = managedPaths;
-}
-
 void Enemy::initRotation() {
     sf::Vector2<float> direction = this->currentPath->getPath().at(1) - this->currentPath->getPath().at(0);
     auto angle = static_cast<float>(std::atan2(-direction.y, direction.x)) * 180.f / static_cast<float>(M_PI);
@@ -248,23 +244,26 @@ void Enemy::toDive(bool tp) {
     this->diveStartPosition = this->sprite.getPosition();
 }
 
+void Enemy::die() {
+    this->currentState = STATES::dead;
+    this->deathAnimationDone = false;
+    this->sprite.setTexture(*this->deathTexture);
+    this->sprite.setScale(2, 2);
+    auto size = this->deathTexture->getSize();
+    sf::Vector2<int> point(0, 0);
+    sf::Vector2<int> vector(static_cast<int>(size.x) / this->deathSpriteDivisor, static_cast<int>(size.y));
+    const sf::Rect<int> rectangle(point, vector);
+    this->sprite.setTextureRect(rectangle);
+    this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
+    float zeroRotation = 0;
+    this->sprite.setRotation(zeroRotation);
+    this->setWantedRotation(zeroRotation);
+}
+
 void Enemy::hit() {
     this->healthPoints--;
     if (this->healthPoints <= 0) {
-        this->currentState = STATES::dead;
-
-        this->deathAnimationDone = false;
-        this->sprite.setTexture(*this->deathTexture);
-        this->sprite.setScale(2, 2);
-        auto size = this->deathTexture->getSize();
-        sf::Vector2<int> point(0, 0);
-        sf::Vector2<int> vector(static_cast<int>(size.x) / this->deathSpriteDivisor, static_cast<int>(size.y));
-        const sf::Rect<int> rectangle(point, vector);
-        this->sprite.setTextureRect(rectangle);
-        this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
-        float zeroRotation = 0;
-        this->sprite.setRotation(zeroRotation);
-        this->setWantedRotation(zeroRotation);
+        this->die();
     }
 }
 

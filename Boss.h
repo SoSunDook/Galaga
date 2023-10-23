@@ -27,7 +27,7 @@ private:
 
     void handleDeadState() override;
 public:
-    explicit Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
+    explicit Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
                   std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedBossTexture, std::shared_ptr<sf::Texture> & managedBossHitTexture, std::shared_ptr<sf::Texture> & managedBeamTexture,
                   float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
     ~Boss() = default;

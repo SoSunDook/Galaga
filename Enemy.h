@@ -23,7 +23,8 @@ public:
     enum TYPES {
         zako,
         goei,
-        boss
+        boss,
+        capturedPlayer
     };
 protected:
     std::shared_ptr<sf::Texture> texture;
@@ -32,8 +33,6 @@ protected:
     std::shared_ptr<sf::Texture> deathTexture;
 
     std::shared_ptr<Formation> formationPtr;
-
-    std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> paths;
 
     TYPES type{};
 
@@ -73,7 +72,6 @@ protected:
     void initSpawnPath(std::shared_ptr<BezierPath> & spawningPath);
     void initFormation(std::shared_ptr<Formation> & formationP);
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
-    void initPaths(std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths);
     void initSprite();
     void initOrigin();
     void initRotation();
@@ -92,7 +90,7 @@ protected:
     void handleFormationState();
     virtual void handleDiveState() = 0;
     virtual void handleDeadState();
-    void handleStates();
+    virtual void handleStates();
 
     void updateRotation();
     void updateAttack();
@@ -107,6 +105,8 @@ public:
     virtual void toDive(bool tp = false);
 
     virtual void hit();
+
+    void die();
 
     bool canAttack();
 

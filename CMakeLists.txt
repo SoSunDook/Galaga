@@ -21,5 +21,6 @@ add_executable(Galaga main.cpp
         BezierPath.cpp
         Formation.cpp
         CaptureBeam.cpp
-        pugixml.cpp)
+        pugixml.cpp
+        CapturedPlayer.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)

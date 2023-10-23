@@ -38,6 +38,9 @@ void Game::initConstants() {
     this->spawningDelay = 0.13f;
     this->spawningTimer = 0.f;
 
+    this->respawningDelay = 2.f;
+    this->respawningTimer = 0.f;
+
     this->divingGoei = {};
     this->skipFirstGoei = false;
     this->goeiDiveDelay = 6.f;
@@ -54,6 +57,10 @@ void Game::initConstants() {
     this->skipFirstBoss = {};
     this->bossDiveDelay = 7.f;
     this->bossDiveTimer = 0.f;
+
+    this->capturedPlayer = {};
+    this->savedCapturedPlayer = {};
+    this->savedCapturedPlayerIndex = {};
 }
 
 void Game::initDeltaTime() {
@@ -508,7 +515,8 @@ void Game::initPaths() {
 }
 
 void Game::initPlayer() {
-    this->player = std::make_unique<Player>(this->deltaTime, this->textureManager["galaga"], this->playerVelocity, this->playerShootCooldown, this->playersScale);
+    this->player = std::make_unique<Player>(this->deltaTime, this->textureManager["playerExplosion"], this->textureManager["galaga"],
+                                            this->playerVelocity, this->playerShootCooldown, this->playersScale);
 }
 
 std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
@@ -537,18 +545,20 @@ void Game::updateDeltaTime() {
 }
 
 void Game::updateInput() {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        this->player->move(-1.f, 0.f);
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        this->player->move(1.f, 0.f);
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
-        auto newBullet = this->initNewPlBullet();
-        auto tmp_bvl = -this->bulletsVelocity;
-        auto tmp_vel = 0.f;
-        newBullet->setDirection(tmp_vel, tmp_bvl);
-        this->playerBullets.push_back(newBullet);
+    if (this->player->getCurrentState() == Player::STATES::alive) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+            this->player->move(-1.f, 0.f);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+            this->player->move(1.f, 0.f);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
+            auto newBullet = this->initNewPlBullet();
+            auto tmp_bvl = -this->bulletsVelocity;
+            auto tmp_vel = 0.f;
+            newBullet->setDirection(tmp_vel, tmp_bvl);
+            this->playerBullets.push_back(newBullet);
+        }
     }
 }
 
@@ -615,7 +625,7 @@ void Game::handleSpawning() {
 
                     if (type == "zako") {
 
-                        auto new_enemy_zako = std::make_shared<Zako>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation,
+                        auto new_enemy_zako = std::make_shared<Zako>(this->deltaTime, this->pathManager->operator[](path), this->formation,
                                                                      this->textureManager["explosion"], this->textureManager["zako"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationZakos.at(index) = new_enemy_zako;
@@ -624,7 +634,7 @@ void Game::handleSpawning() {
 
                     } else if (type == "goei") {
 
-                        auto new_enemy_goei = std::make_shared<Goei>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation,
+                        auto new_enemy_goei = std::make_shared<Goei>(this->deltaTime, this->pathManager->operator[](path), this->formation,
                                                                      this->textureManager["explosion"], this->textureManager["goei"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationGoeis.at(index) = new_enemy_goei;
@@ -633,7 +643,7 @@ void Game::handleSpawning() {
 
                     } else if (type == "boss") {
 
-                        auto new_enemy_boss = std::make_shared<Boss>(this->deltaTime, this->pathManager, this->pathManager->operator[](path), this->formation,
+                        auto new_enemy_boss = std::make_shared<Boss>(this->deltaTime, this->pathManager->operator[](path), this->formation,
                                                                      this->textureManager["explosion"], this->textureManager["boss"], this->textureManager["boss2"], this->textureManager["beam"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
                         this->formationBosses.at(index) = new_enemy_boss;
@@ -674,7 +684,32 @@ void Game::handleFormation() {
             }
         }
     } else {
-       this->handleDiving();
+        if (this->player->getCurrentState() == Player::STATES::alive) {
+            this->handleDiving();
+        } else {
+            if (this->firstDivingZako != nullptr && this->firstDivingZako->getCurrentState() != Enemy::STATES::dive) {
+                this->firstDivingZako = {};
+            }
+            if (this->secondDivingZako != nullptr && this->secondDivingZako->getCurrentState() != Enemy::STATES::dive) {
+                this->secondDivingZako = {};
+            }
+            if (this->divingGoei != nullptr && this->divingGoei->getCurrentState() != Enemy::STATES::dive) {
+                this->divingGoei = {};
+            }
+            if (this->divingBoss != nullptr && this->divingBoss->getCurrentState() != Enemy::STATES::dive) {
+                this->divingBoss = {};
+            }
+
+            if (!(this->firstDivingZako || this->secondDivingZako || this->divingGoei || this->divingBoss)) {
+                if (this->player->getCurrentState() != Player::STATES::dead) {
+                    this->respawningTimer += this->deltaTime->asSeconds();
+                    if (this->respawningTimer >= this->respawningDelay) {
+                        this->player->respawn();
+                        this->respawningTimer = 0.f;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -909,6 +944,72 @@ void Game::handlePVE() {
     }
 }
 
+void Game::handleEVP() {
+    if (this->player->getCurrentState() == Player::STATES::alive) {
+        for (auto zako_iter = this->formationZakos.begin(); (zako_iter != this->formationZakos.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
+            if (*zako_iter) {
+                if (zako_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (zako_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBounds())) {
+                        this->player->toGetHit();
+                        zako_iter->get()->die();
+                        if (zako_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            this->aliveCountZako--;
+                        }
+                        break;
+                    } else {
+                        ++zako_iter;
+                    }
+                } else {
+                    ++zako_iter;
+                }
+            } else {
+                ++zako_iter;
+            }
+        }
+        for (auto goei_iter = this->formationGoeis.begin(); (goei_iter != this->formationGoeis.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
+            if (*goei_iter) {
+                if (goei_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (goei_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBounds())) {
+                        this->player->toGetHit();
+                        goei_iter->get()->die();
+                        if (goei_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            this->aliveCountGoei--;
+                        }
+                        break;
+                    } else {
+                        ++goei_iter;
+                    }
+                } else {
+                    ++goei_iter;
+                }
+            } else {
+                ++goei_iter;
+            }
+        }
+        for (auto boss_iter = this->formationBosses.begin(); (boss_iter != this->formationBosses.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
+            if (*boss_iter) {
+                if (boss_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (boss_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBounds())) {
+                        this->player->toGetHit();
+                        boss_iter->get()->die();
+                        if (boss_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            this->aliveCountBoss--;
+                        }
+                        break;
+                    } else {
+                        ++boss_iter;
+                    }
+                } else {
+                    ++boss_iter;
+                }
+            } else {
+                ++boss_iter;
+            }
+        }
+
+    }
+}
+
 void Game::updateEnemies() {
     for (auto & zako : this->formationZakos) {
         if (zako) {
@@ -931,7 +1032,7 @@ void Game::updateEnemies() {
 
 void Game::updateCombat() {
     this->handlePVE();
-    this->handlePVE();
+    this->handleEVP();
 }
 
 void Game::update() {

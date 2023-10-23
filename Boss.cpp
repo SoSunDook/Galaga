@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Boss.h"
 
-Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & managedPaths, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
+Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
            std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedBossTexture, std::shared_ptr<sf::Texture> & managedBossHitTexture, std::shared_ptr<sf::Texture> & managedBeamTexture,
            float & velocity,float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 2;
@@ -25,7 +25,6 @@ Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<std::map<std::stri
     this->initTexture(managedBossTexture);
     this->deathTexture = managedDeathTexture;
     this->hitTexture = managedBossHitTexture;
-    this->initPaths(managedPaths);
     this->initSprite();
     this->initOrigin();
     this->initRotation();

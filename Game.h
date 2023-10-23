@@ -11,6 +11,7 @@
 #include "Zako.h"
 #include "Goei.h"
 #include "Boss.h"
+#include "CapturedPlayer.h"
 #include "pugixml.hpp"
 #include <memory>
 #include <string>
@@ -70,6 +71,9 @@ private:
     float spawningDelay;
     float spawningTimer;
 
+    float respawningDelay;
+    float respawningTimer;
+
     std::shared_ptr<Goei> divingGoei;
     bool skipFirstGoei;
     float goeiDiveDelay;
@@ -85,6 +89,10 @@ private:
     bool skipFirstBoss;
     float bossDiveDelay;
     float bossDiveTimer;
+
+    std::shared_ptr<CapturedPlayer> capturedPlayer;
+    bool savedCapturedPlayer;
+    int savedCapturedPlayerIndex;
 
     void initDeltaTime();
     void initConstants();
