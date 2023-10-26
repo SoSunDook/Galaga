@@ -13,6 +13,7 @@ Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spaw
     this->type = TYPES::boss;
     this->captureDive = false;
     this->capturing = false;
+    this->captured = false;
     this->spriteScale = spriteScale;
     this->velocity = velocity;
     this->rotationVelocity = enemyRotationVelocity;
@@ -51,15 +52,27 @@ void Boss::handleCaptureBeam() {
     this->captureBeam.update();
 
     if (this->captureBeam.finishedAnimation()) {
-        sf::Vector2f direction = sf::Vector2<float>(this->sprite.getPosition().x, 740.f) - this->sprite.getPosition();
-        this->setWantedRotation(direction.x, direction.y);
-        float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
-        if (distance > movement) {
-            this->sprite.move((direction / distance) * movement);
+        if (!captured) {
+            sf::Vector2f direction = sf::Vector2<float>(this->sprite.getPosition().x, 740.f) - this->sprite.getPosition();
+            this->setWantedRotation(direction.x, direction.y);
+            float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+            float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
+            if (distance > movement) {
+                this->sprite.move((direction / distance) * movement);
+            } else {
+                this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 100);
+                this->capturing = false;
+            }
         } else {
-            this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 100);
-            this->capturing = false;
+            sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
+            this->setWantedRotation(direction.x, direction.y);
+            float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+            float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
+            if (distance > movement) {
+                this->sprite.move((direction / distance) * movement);
+            } else {
+                this->joinFormation();
+            }
         }
     }
 }
@@ -136,11 +149,19 @@ void Boss::toDive(bool tp) {
     }
 }
 
+bool & Boss::getCapturing() {
+    return this->capturing;
+}
+
 void Boss::render(sf::RenderTarget &target) {
     Enemy::render(target);
     if (this->capturing && !this->captureBeam.finishedAnimation()) {
         this->captureBeam.render(target);
     }
+}
+
+float & Boss::getSpriteScale() {
+    return this->spriteScale;
 }
 
 

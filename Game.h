@@ -30,7 +30,7 @@ private:
     sf::Clock clock;
     std::shared_ptr<sf::Time> deltaTime;
 
-    std::unique_ptr<Player> player;
+    std::shared_ptr<Player> player;
     std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
 
     std::vector<std::shared_ptr<Zako>> formationZakos;

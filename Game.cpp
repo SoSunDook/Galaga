@@ -387,9 +387,9 @@ void Game::initPaths() {
     new_path_mirrored->addCurve(new_curve, samples);
 
     p0 = {60, 300};
-    p3 = {200,  670};
+    p3 = {220,  780};
     p1 = {60, 380};
-    p2 = {200, 590};
+    p2 = {220, 700};
 
     new_curve = BezierCurve(p0, p1, p2, p3);
     new_path->addCurve(new_curve, samples);
@@ -515,7 +515,7 @@ void Game::initPaths() {
 }
 
 void Game::initPlayer() {
-    this->player = std::make_unique<Player>(this->deltaTime, this->textureManager["playerExplosion"], this->textureManager["galaga"],
+    this->player = std::make_shared<Player>(this->deltaTime, this->textureManager["playerExplosion"], this->textureManager["galaga"],
                                             this->playerVelocity, this->playerShootCooldown, this->playersScale);
 }
 
@@ -546,18 +546,38 @@ void Game::updateDeltaTime() {
 
 void Game::updateInput() {
     if (this->player->getCurrentState() == Player::STATES::alive) {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-            this->player->move(-1.f, 0.f);
+        bool canMove;
+        if (this->capturedPlayer) {
+            if (this->capturedPlayer->getCurrentState() != Enemy::STATES::dead && this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving) {
+                sf::Vector2<float> lockPoint = {this->player->getStartPos().x - this->player->getOrigin().x * this->playersScale, this->player->getStartPos().y};
+                sf::Vector2<float> currentPlayerPos = {this->player->getGlobalBounds().getPosition() + this->player->getOrigin() * this->playersScale};
+                auto difference = currentPlayerPos.x - lockPoint.x;
+                if ((difference > 0 ? difference : -difference) < 5) {
+                    this->capturedPlayer->playerLocked = true;
+                }
+            }
+            if (this->capturedPlayer->playerLocked) {
+                canMove = false;
+            } else {
+                canMove = true;
+            }
+        } else {
+            canMove = true;
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-            this->player->move(1.f, 0.f);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
-            auto newBullet = this->initNewPlBullet();
-            auto tmp_bvl = -this->bulletsVelocity;
-            auto tmp_vel = 0.f;
-            newBullet->setDirection(tmp_vel, tmp_bvl);
-            this->playerBullets.push_back(newBullet);
+        if (canMove) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+                this->player->move(-1.f, 0.f);
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+                this->player->move(1.f, 0.f);
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
+                auto newBullet = this->initNewPlBullet();
+                auto tmp_bvl = -this->bulletsVelocity;
+                auto tmp_vel = 0.f;
+                newBullet->setDirection(tmp_vel, tmp_bvl);
+                this->playerBullets.push_back(newBullet);
+            }
         }
     }
 }
@@ -684,7 +704,7 @@ void Game::handleFormation() {
             }
         }
     } else {
-        if (this->player->getCurrentState() == Player::STATES::alive) {
+        if (this->player->getCurrentState() == Player::STATES::alive && (!(this->capturedPlayer && this->capturedPlayer->getCurrentState() != Enemy::STATES::dead && this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving))) {
             this->handleDiving();
         } else {
             if (this->firstDivingZako != nullptr && this->firstDivingZako->getCurrentState() != Enemy::STATES::dive) {
@@ -700,12 +720,14 @@ void Game::handleFormation() {
                 this->divingBoss = {};
             }
 
-            if (!(this->firstDivingZako || this->secondDivingZako || this->divingGoei || this->divingBoss)) {
-                if (this->player->getCurrentState() != Player::STATES::dead) {
-                    this->respawningTimer += this->deltaTime->asSeconds();
-                    if (this->respawningTimer >= this->respawningDelay) {
-                        this->player->respawn();
-                        this->respawningTimer = 0.f;
+            if (this->player->getCurrentState() != Player::STATES::alive) {
+                if (!(this->firstDivingZako || this->secondDivingZako || this->divingGoei || this->divingBoss)) {
+                    if (this->player->getCurrentState() != Player::STATES::dead) {
+                        this->respawningTimer += this->deltaTime->asSeconds();
+                        if (this->respawningTimer >= this->respawningDelay) {
+                            this->player->respawn();
+                            this->respawningTimer = 0.f;
+                        }
                     }
                 }
             }
@@ -784,82 +806,127 @@ void Game::handleDiving() {
     if (this->divingBoss == nullptr) {
         this->bossDiveTimer += this->deltaTime->asSeconds();
         if (this->bossDiveTimer >= this->bossDiveDelay) {
-            bool skipped;
-            if (this->aliveCountBoss <= 1) {
-                skipped = true;
-            } else {
-                skipped = false;
-            }
-            for (int i = this->formationBosses.size() - 1; i >= 0; --i) {
-                if (this->formationBosses[i]->getCurrentState() == Enemy::STATES::formation) {
-                    if (!this->skipFirstBoss || (this->skipFirstBoss && skipped)) {
-                        this->divingBoss = this->formationBosses[i];
-                        if (this->captureDive) {
+            if (this->capturedPlayer && this->capturedPlayer->getCurrentState() == Enemy::STATES::formation
+            && (this->formationBosses[this->capturedPlayer->getIndex()]->getCurrentState() == Enemy::STATES::formation)) {
+                this->divingBoss = this->formationBosses[this->capturedPlayer->getIndex()];
 
-                            std::string path = "divebosscapture";
+                std::string path = "diveboss";
+                if (this->divingBoss->getIndex() % 2 == 1) {
+                    path.append("Mirrored");
+                }
 
-                            srand(time (nullptr));
-                            auto choose = rand() % 3;
-                            switch (choose) {
-                                case 0:
-                                    path.append("left");
-                                    break;
-                                case 1:
-                                    path.append("mid");
-                                    break;
-                                case 2:
-                                    path.append("right");
-                                    break;
-                                default:
-                                    path.append("mid");
-                                    break;
-                            }
+                this->divingBoss->setPath(this->pathManager->operator[](path));
+                this->divingBoss->toDive();
+                this->capturedPlayer->setPath(this->pathManager->operator[](path));
+                this->capturedPlayer->toDive();
 
-                            if (i % 2 == 1) {
-                                path.append("Mirrored");
-                            }
+                int index = this->divingBoss->getIndex();
+                int firstEscortIndex = (index % 2 == 0) ? (index * 2) : (index * 2 - 1);
+                int secondEscortIndex = firstEscortIndex + 4;
 
-                            this->divingBoss->setPath(this->pathManager->operator[](path));
-                            this->divingBoss->toDive(true);
-                        } else {
+                if (this->formationGoeis[firstEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
 
-                            std::string path = "diveboss";
-                            if (i % 2 == 1) {
-                                path.append("Mirrored");
-                            }
-
-                            this->divingBoss->setPath(this->pathManager->operator[](path));
-                            this->divingBoss->toDive();
-                            int index = this->divingBoss->getIndex();
-                            int firstEscortIndex = (index % 2 == 0) ? (index * 2) : (index * 2 - 1);
-                            int secondEscortIndex = firstEscortIndex + 4;
-
-                            if (this->formationGoeis[firstEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
-
-                                std::string path = "diveboss";
-                                if (i % 2 == 1) {
-                                    path.append("Mirrored");
-                                }
-
-                                this->formationGoeis[firstEscortIndex]->setPath(this->pathManager->operator[](path));
-                                this->formationGoeis[firstEscortIndex]->toDive(true);
-                            }
-                            if (this->formationGoeis[secondEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
-
-                                std::string path = "diveboss";
-                                if (i % 2 == 1) {
-                                    path.append("Mirrored");
-                                }
-
-                                this->formationGoeis[secondEscortIndex]->setPath(this->pathManager->operator[](path));
-                                this->formationGoeis[secondEscortIndex]->toDive(true);
-                            }
-                        }
-                        this->skipFirstBoss = !this->skipFirstBoss;
-                        this->captureDive = !this->captureDive;
-                        break;
+                    std::string path = "diveboss";
+                    if (firstEscortIndex % 2 == 1) {
+                        path.append("Mirrored");
                     }
+
+                    this->formationGoeis[firstEscortIndex]->setPath(this->pathManager->operator[](path));
+                    this->formationGoeis[firstEscortIndex]->toDive(true);
+                }
+                if (this->formationGoeis[secondEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
+
+                    std::string path = "diveboss";
+                    if (secondEscortIndex % 2 == 1) {
+                        path.append("Mirrored");
+                    }
+
+                    this->formationGoeis[secondEscortIndex]->setPath(this->pathManager->operator[](path));
+                    this->formationGoeis[secondEscortIndex]->toDive(true);
+                }
+            } else {
+                bool skipped;
+                if (this->aliveCountBoss <= 1) {
                     skipped = true;
+                } else {
+                    skipped = false;
+                }
+                for (int i = this->formationBosses.size() - 1; i >= 0; --i) {
+                    if (this->formationBosses[i]->getCurrentState() == Enemy::STATES::formation) {
+                        if (!this->skipFirstBoss || (this->skipFirstBoss && skipped)) {
+                            this->divingBoss = this->formationBosses[i];
+                            if (this->captureDive) {
+
+                                std::string path = "divebosscapture";
+
+                                srand(time(nullptr));
+                                auto choose = rand() % 3;
+                                switch (choose) {
+                                    case 0:
+                                        path.append("left");
+                                        break;
+                                    case 1:
+                                        path.append("mid");
+                                        break;
+                                    case 2:
+                                        path.append("right");
+                                        break;
+                                    default:
+                                        path.append("mid");
+                                        break;
+                                }
+
+                                if (i % 2 == 1) {
+                                    path.append("Mirrored");
+                                }
+
+                                this->divingBoss->setPath(this->pathManager->operator[](path));
+                                this->divingBoss->toDive(true);
+                            } else {
+
+                                std::string path = "diveboss";
+                                if (i % 2 == 1) {
+                                    path.append("Mirrored");
+                                }
+
+                                this->divingBoss->setPath(this->pathManager->operator[](path));
+                                this->divingBoss->toDive();
+                                int index = this->divingBoss->getIndex();
+                                int firstEscortIndex = (index % 2 == 0) ? (index * 2) : (index * 2 - 1);
+                                int secondEscortIndex = firstEscortIndex + 4;
+
+                                if (this->formationGoeis[firstEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
+
+                                    std::string path = "diveboss";
+                                    if (i % 2 == 1) {
+                                        path.append("Mirrored");
+                                    }
+
+                                    this->formationGoeis[firstEscortIndex]->setPath(
+                                            this->pathManager->operator[](path));
+                                    this->formationGoeis[firstEscortIndex]->toDive(true);
+                                }
+                                if (this->formationGoeis[secondEscortIndex]->getCurrentState() == Enemy::STATES::formation) {
+
+                                    std::string path = "diveboss";
+                                    if (i % 2 == 1) {
+                                        path.append("Mirrored");
+                                    }
+
+                                    this->formationGoeis[secondEscortIndex]->setPath(this->pathManager->operator[](path));
+                                    this->formationGoeis[secondEscortIndex]->toDive(true);
+                                }
+                            }
+                            this->skipFirstBoss = !this->skipFirstBoss;
+                            if (this->capturedPlayer) {
+                                this->captureDive = false;
+                            } else {
+                                this->captureDive = !this->captureDive;
+                            }
+                            break;
+                        }
+                        skipped = true;
+                    }
                 }
             }
             this->bossDiveTimer = 0.f;
@@ -921,8 +988,24 @@ void Game::handlePVE() {
                 if (boss_iter->get()->getCurrentState() != Enemy::STATES::dead) {
                     if (boss_iter->get()->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
                         pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
+                        Enemy::STATES prev_state = boss_iter->get()->getCurrentState();
                         boss_iter->get()->hit();
                         if (boss_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            if (this->capturedPlayer && this->capturedPlayer->getIndex() == boss_iter->get()->getIndex()) {
+                                CapturedPlayer::CAPTURED_STATES state;
+                                if (prev_state == Enemy::STATES::formation) {
+                                    std::string path = "diveboss";
+                                    if (this->capturedPlayer->getIndex() % 2 == 1) {
+                                        path.append("Mirrored");
+                                    }
+                                    this->capturedPlayer->setPath(this->pathManager->operator[](path));
+                                    this->capturedPlayer->toDive();
+                                    state = CapturedPlayer::CAPTURED_STATES::bossShotInFormation;
+                                } else if (prev_state == Enemy::STATES::dive) {
+                                    state = CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving;
+                                }
+                                this->capturedPlayer->setCapturedState(state);
+                            }
                             this->aliveCountBoss--;
                         }
                         bullet_deleted = true;
@@ -993,6 +1076,10 @@ void Game::handleEVP() {
                         this->player->toGetHit();
                         boss_iter->get()->die();
                         if (boss_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            if (this->capturedPlayer && this->capturedPlayer->getIndex() == boss_iter->get()->getIndex()) {
+                                CapturedPlayer::CAPTURED_STATES state = CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving;
+                                this->capturedPlayer->setCapturedState(state);
+                            }
                             this->aliveCountBoss--;
                         }
                         break;
@@ -1007,6 +1094,19 @@ void Game::handleEVP() {
             }
         }
 
+        if (this->divingBoss && this->divingBoss->getCurrentState() == Enemy::STATES::dive) {
+            if (this->divingBoss->getCapturing()) {
+                if (this->divingBoss->getCaptureBeam().getGlobalBounds().intersects(this->player->getGlobalBounds())) {
+                    this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime, this->formation, this->divingBoss, this->player,
+                                                                     this->textureManager["explosion"], this->textureManager["galaga"], this->textureManager["galagaRed"],
+                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->playersScale, this->divingBoss->getIndex());
+                    auto playerPosition = this->player->getGlobalBounds().getPosition() + this->player->getOrigin() * this->playersScale;
+                    this->capturedPlayer->setPosition(playerPosition.x, playerPosition.y);
+                    this->player->toGetCaptured();
+                    this->divingBoss->captured = true;
+                }
+            }
+        }
     }
 }
 
@@ -1026,6 +1126,18 @@ void Game::updateEnemies() {
     for (auto & boss : this->formationBosses) {
         if (boss) {
             boss->update();
+        }
+    }
+
+    if (this->capturedPlayer) {
+        this->capturedPlayer->update();
+        if (this->capturedPlayer->savedNextLevel) {
+            this->savedCapturedPlayer = true;
+            this->savedCapturedPlayerIndex = this->capturedPlayer->getIndex();
+        }
+        if (this->capturedPlayer->playerDoubled) {
+//            toDouble
+            this->capturedPlayer->playerDoubled = false;
         }
     }
 }
@@ -1075,6 +1187,10 @@ void Game::render() {
         if (boss) {
             boss->render(*this->window);
         }
+    }
+
+    if (this->capturedPlayer) {
+        this->capturedPlayer->render(*this->window);
     }
 
     this->window->display();

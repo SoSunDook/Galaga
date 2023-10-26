@@ -72,7 +72,7 @@ protected:
     void initSpawnPath(std::shared_ptr<BezierPath> & spawningPath);
     void initFormation(std::shared_ptr<Formation> & formationP);
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
-    void initSprite();
+    virtual void initSprite();
     void initOrigin();
     void initRotation();
     void initSpawnPosition();
@@ -125,6 +125,7 @@ public:
 
     int & getIndex();
 
+    sf::Vector2<float> getOrigin();
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();
 };

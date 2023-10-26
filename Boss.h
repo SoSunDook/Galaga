@@ -27,6 +27,8 @@ private:
 
     void handleDeadState() override;
 public:
+    bool captured;
+public:
     explicit Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
                   std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedBossTexture, std::shared_ptr<sf::Texture> & managedBossHitTexture, std::shared_ptr<sf::Texture> & managedBeamTexture,
                   float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
@@ -38,7 +40,11 @@ public:
 
     CaptureBeam & getCaptureBeam();
 
-    virtual void render(sf::RenderTarget & target) override;
+    bool & getCapturing();
+
+    void render(sf::RenderTarget & target) override;
+
+    float & getSpriteScale();
 };
 
 

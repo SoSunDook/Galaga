@@ -296,6 +296,10 @@ int & Enemy::getIndex() {
     return this->index;
 }
 
+sf::Vector2<float> Enemy::getOrigin() {
+    return this->sprite.getOrigin();
+}
+
 sf::FloatRect Enemy::getGlobalBounds() {
     return this->sprite.getGlobalBounds();
 }

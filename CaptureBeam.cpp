@@ -158,3 +158,11 @@ void CaptureBeam::render(sf::RenderTarget & target) {
     target.draw(this->sprite);
 }
 
+sf::FloatRect CaptureBeam::getGlobalBounds() {
+    return this->sprite.getGlobalBounds();
+}
+
+sf::FloatRect CaptureBeam::getLocalBounds() {
+    return this->sprite.getLocalBounds();
+}
+

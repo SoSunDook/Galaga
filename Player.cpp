@@ -27,6 +27,7 @@ void Player::setStartPos() {
     const float startPosX = 720.f / 2;
     const float startPosY = 720.f - (this->sprite.getGlobalBounds().getSize().y + this->sprite.getOrigin().y * this->spriteScale);
     this->sprite.setPosition(startPosX, startPosY);
+    this->startPos = {startPosX, startPosY};
 }
 
 Player::Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture,
@@ -69,7 +70,6 @@ void Player::runDeathAnimation() {
                 this->deathAnimationTimer = 0.f;
             } else {
                 this->deathAnimationDone = true;
-
                 sf::Vector2<int> point(0, 0);
                 sf::Vector2<int> vector(0, 0);
                 const sf::Rect<int> rectangle(point, vector);
@@ -108,6 +108,8 @@ void Player::handleStates() {
         case STATES::dead:
             this->handleDeadState();
             break;
+        case STATES::captured:
+            break;
         default:
             break;
     }
@@ -126,28 +128,46 @@ bool Player::canAttack() {
     return false;
 }
 
-void Player::die() {
-    this->deathAnimationDone = false;
-    this->currentDeathAnimationFrame = 0;
-    this->sprite.setTexture(*this->deathTexture);
-    this->sprite.setScale(2, 2);
-    auto size = this->deathTexture->getSize();
-    sf::Vector2<int> point(0, 0);
-    sf::Vector2<int> vector(static_cast<int>(size.x) / this->deathSpriteDivisor, static_cast<int>(size.y));
-    const sf::Rect<int> rectangle(point, vector);
-    this->sprite.setTextureRect(rectangle);
-    this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
-    float zeroRotation = 0;
-    this->sprite.setRotation(zeroRotation);
+void Player::die(bool tp) {
+    if (!tp) {
+        this->deathAnimationDone = false;
+        this->currentDeathAnimationFrame = 0;
+        this->sprite.setTexture(*this->deathTexture);
+        this->sprite.setScale(2, 2);
+        auto size = this->deathTexture->getSize();
+        sf::Vector2<int> point(0, 0);
+        sf::Vector2<int> vector(static_cast<int>(size.x) / this->deathSpriteDivisor, static_cast<int>(size.y));
+        const sf::Rect<int> rectangle(point, vector);
+        this->sprite.setTextureRect(rectangle);
+        this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
+        float zeroRotation = 0;
+        this->sprite.setRotation(zeroRotation);
+    } else {
+        this->deathAnimationDone = true;
+        sf::Vector2<int> point;
+        sf::Vector2<int> vector;
+        const sf::Rect<int> rectangle(point, vector);
+        this->sprite.setTextureRect(rectangle);
+    }
 }
 
 
 void Player::toGetHit() {
     this->healthPoints--;
     this->die();
-    if (this->healthPoints > 0) {
+    if (this->healthPoints != 0) {
         this->currentState = STATES::hit;
-    } else if (this->healthPoints == 0) {
+    } else {
+        this->currentState = STATES::dead;
+    }
+}
+
+void Player::toGetCaptured() {
+    this->healthPoints--;
+    this->die(true);
+    if (this->healthPoints != 0) {
+        this->currentState = STATES::captured;
+    } else {
         this->currentState = STATES::dead;
     }
 }
@@ -177,4 +197,8 @@ sf::FloatRect Player::getLocalBounds() {
 
 sf::Vector2<float> Player::getOrigin() {
     return this->sprite.getOrigin();
+}
+
+sf::Vector2<float> & Player::getStartPos() {
+    return this->startPos;
 }

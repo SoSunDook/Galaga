@@ -6,16 +6,25 @@
 #define GALAGA_CAPTUREDPLAYER_H
 #include "Enemy.h"
 #include "Boss.h"
+#include "Player.h"
 
 class CapturedPlayer : public Enemy {
 public:
     enum CAPTURED_STATES {
         normal,
         onlyCaptured,
-        onlyCapturedWithBoss
+        onlyCapturedWithBoss,
+        bossShotWhileDiving,
+        bossShotInFormation
     };
 private:
+    std::shared_ptr<sf::Texture> textureRed;
+
+    std::shared_ptr<Boss> relatedBoss;
+
     sf::Vector2<float> startPos;
+
+    std::shared_ptr<Player> relatedPlayer;
 
     CAPTURED_STATES currentCapturedState;
 
@@ -25,22 +34,29 @@ private:
 
     void handleOnlyCapturedState();
     void handleOnlyCapturedWithBossState();
+    void handleBossShotWhileDivingState();
+    void handleBossShotInFormationState();
 
     void handleStates() override;
 
-    bool nextLevel;
-public:
-    bool bossShotWhileDiving;
-    bool bossShotInFormation;
+    bool spriteChanged;
 
+    bool reachedFirstEndPoint;
+
+    void initSprite() override;
+public:
     bool playerLocked;
+
+    bool savedNextLevel;
 
     bool playerDoubled;
 public:
-    explicit CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<Formation> & enemyFormationPtr, sf::Vector2<float> & bossPosition,
+    explicit CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
                   std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedPlayerTexture, std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,
                   float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
     ~CapturedPlayer() = default;
+
+    void setCapturedState(CAPTURED_STATES & newState);
 
     CAPTURED_STATES & getCapturedState();
 };

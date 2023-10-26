@@ -55,6 +55,9 @@ public:
     void update();
 
     void render(sf::RenderTarget & target);
+
+    sf::FloatRect getGlobalBounds();
+    sf::FloatRect getLocalBounds();
 };
 
 

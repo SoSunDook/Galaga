@@ -2,9 +2,10 @@
 // Created by SoSunDook on 21.10.2023.
 //
 
+#include <iostream>
 #include "CapturedPlayer.h"
 
-CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<Formation> & enemyFormationPtr, sf::Vector2<float> & bossPosition,
+CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
                                std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedPlayerTexture, std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,
                                float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 1;
@@ -17,20 +18,31 @@ CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_pt
     this->index = enemyIndex;
     this->currentState = STATES::formation;
     this->currentCapturedState = CAPTURED_STATES::onlyCaptured;
-    this->nextLevel = false;
-    this->bossShotWhileDiving = false;
-    this->bossShotInFormation = false;
+    this->spriteChanged = false;
+    this->savedNextLevel = false;
+    this->reachedFirstEndPoint = false;
     this->deltaTime = timer;
-    this->startPos = bossPosition;
+    this->relatedBoss = divingBoss;
+    this->startPos = {this->relatedBoss->getGlobalBounds().getPosition().x + this->relatedBoss->getOrigin().x * this->relatedBoss->getSpriteScale(),
+                     this->relatedBoss->getGlobalBounds().getPosition().y - this->relatedBoss->getOrigin().y * this->relatedBoss->getSpriteScale()};
+    this->relatedPlayer = player;
     this->initFormation(enemyFormationPtr);
     this->initTexture(managedPlayerTexture);
     this->deathTexture = managedDeathTexture;
+    this->textureRed = managedCapturedPlayerTexture;
     this->initSprite();
     this->initOrigin();
-    this->initRotation();
-    this->initSpawnPosition();
 }
 
+void CapturedPlayer::initSprite() {
+    this->sprite.setTexture(*this->texture);
+    this->sprite.setScale(this->spriteScale, this->spriteScale);
+    auto size = this->texture->getSize();
+    sf::Vector2<int> point(0, 0);
+    sf::Vector2<int> vector(static_cast<int>(size.x), static_cast<int>(size.y));
+    const sf::Rect<int> rectangle(point, vector);
+    this->sprite.setTextureRect(rectangle);
+}
 
 sf::Vector2<float> CapturedPlayer::localFormationPosition() {
     sf::Vector2<float> pos;
@@ -40,84 +52,51 @@ sf::Vector2<float> CapturedPlayer::localFormationPosition() {
 }
 
 void CapturedPlayer::handleDiveState() {
-    if (!this->bossShotInFormation && !this->bossShotWhileDiving) {
-        if (this->currentPoint < this->currentPath->getPath().size()) {
-            sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition -
-                                     this->sprite.getPosition();
-            this->setWantedRotation(direction.x, direction.y);
-            float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-            float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
-            if (distance <= movement) {
-                this->currentPoint++;
-            } else {
-                this->sprite.move((direction / distance) * movement);
-            }
-
-            if (this->currentPoint >= this->currentPath->getPath().size()) {
-                this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 200);
-            }
+    if (this->currentPoint < this->currentPath->getPath().size()) {
+        sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition - this->sprite.getPosition();
+        this->setWantedRotation(direction.x, direction.y);
+        float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
+        if (distance <= movement) {
+            this->currentPoint++;
         } else {
-            sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
-            this->setWantedRotation(direction.x, direction.y);
-            float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-            float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
-            if (distance > movement) {
-                this->sprite.move((direction / distance) * movement);
-            } else {
-                this->joinFormation();
-            }
+            this->sprite.move((direction / distance) * movement);
         }
-    } else if (this->bossShotInFormation) {
-        if (this->currentPoint < this->currentPath->getPath().size()) {
-            sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition -
-                                     this->sprite.getPosition();
-            this->setWantedRotation(direction.x, direction.y);
-            float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-            float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
-            if (distance <= movement) {
-                this->currentPoint++;
-            } else {
-                this->sprite.move((direction / distance) * movement);
-            }
 
-            if (this->currentPoint >= this->currentPath->getPath().size()) {
-                this->nextLevel = true;
-            }
+        if (this->currentPoint >= this->currentPath->getPath().size()) {
+            this->sprite.setPosition(this->globalFormationPosition().x, this->globalFormationPosition().y - 200);
         }
-    } else if (this->bossShotWhileDiving) {
-        sf::Vector2f endPoint = {360 + this->sprite.getOrigin().x * this->spriteScale, 570.f};
-        sf::Vector2f direction = endPoint - this->sprite.getPosition();
+    } else {
+        sf::Vector2f direction = this->globalFormationPosition() - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
         float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
         if (distance > movement) {
             this->sprite.move((direction / distance) * movement);
         } else {
-            if (this->playerLocked) {
-                endPoint = {360 + this->sprite.getOrigin().x * this->spriteScale, 620.f};
-                direction = endPoint - this->sprite.getPosition();
-                distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-                movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
-                if (distance > movement) {
-                    this->sprite.move((direction / distance) * movement);
-                } else {
-                    this->playerDoubled = true;
-                }
-            }
+            this->joinFormation();
         }
     }
 }
 
 void CapturedPlayer::handleOnlyCapturedState() {
-    sf::Vector2f endPoint = {startPos.x, startPos.y - this->sprite.getOrigin().y * this->spriteScale};
+    sf::Vector2f endPoint = startPos;
     sf::Vector2f direction = endPoint - this->sprite.getPosition();
-    this->setWantedRotation(direction.x, direction.y);
+    float rotation = 180;
+    this->setWantedRotation(rotation);
     float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
     float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
     if (distance > movement) {
         this->sprite.move((direction / distance) * movement);
     } else {
-        this->currentCapturedState = CAPTURED_STATES::onlyCapturedWithBoss;
+        if (!this->spriteChanged) {
+            this->sprite.setTexture(*this->textureRed);
+            this->spriteChanged = true;
+        }
+        if (this->relatedBoss->getCaptureBeam().finishedAnimation()) {
+            this->spriteChanged = false;
+            this->currentCapturedState = CAPTURED_STATES::onlyCapturedWithBoss;
+        }
     }
 }
 
@@ -129,8 +108,70 @@ void CapturedPlayer::handleOnlyCapturedWithBossState() {
     if (distance > movement) {
         this->sprite.move((direction / distance) * movement);
     } else {
+        this->joinFormation();
         this->currentCapturedState = CAPTURED_STATES::normal;
     }
+}
+
+void CapturedPlayer::handleBossShotWhileDivingState() {
+    if (!reachedFirstEndPoint) {
+        sf::Vector2f endPoint = {360 + this->sprite.getOrigin().x * this->spriteScale, 570.f};
+        sf::Vector2f direction = endPoint - this->sprite.getPosition();
+        this->setWantedRotation(direction.x, direction.y);
+        float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
+        if (distance > movement) {
+            this->sprite.move((direction / distance) * movement);
+        } else {
+            this->reachedFirstEndPoint = true;
+        }
+    } else {
+        if (!this->playerDoubled) {
+            float zeroRotation = 0;
+            this->setWantedRotation(zeroRotation);
+        }
+        if (this->playerLocked) {
+            sf::Vector2f endPoint = this->relatedPlayer->getGlobalBounds().getPosition() + this->relatedPlayer->getOrigin() * this->spriteScale;
+            endPoint = {endPoint.x + this->relatedPlayer->getOrigin().x * this->spriteScale * 2.f, endPoint.y};
+            sf::Vector2f direction = endPoint - this->sprite.getPosition();
+            float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+            float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
+            if (distance > movement) {
+                this->sprite.move((direction / distance) * movement);
+            } else {
+                this->currentState = Enemy::STATES::dead;
+                this->playerLocked = false;
+                this->playerDoubled = true;
+                sf::Vector2<int> point(0, 0);
+                sf::Vector2<int> vector(0, 0);
+                const sf::Rect<int> rectangle(point, vector);
+                this->sprite.setTextureRect(rectangle);
+            }
+        }
+    }
+}
+
+void CapturedPlayer::handleBossShotInFormationState() {
+    if (this->currentPoint < this->currentPath->getPath().size()) {
+        sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition - this->sprite.getPosition();
+        this->setWantedRotation(direction.x, direction.y);
+        float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
+        if (distance <= movement) {
+            this->currentPoint++;
+        } else {
+            this->sprite.move((direction / distance) * movement);
+        }
+
+        if (this->currentPoint >= this->currentPath->getPath().size()) {
+            this->currentState = Enemy::STATES::dead;
+            this->savedNextLevel = true;
+        }
+    }
+}
+
+void CapturedPlayer::setCapturedState(CapturedPlayer::CAPTURED_STATES & newState) {
+    this->currentCapturedState = newState;
 }
 
 CapturedPlayer::CAPTURED_STATES & CapturedPlayer::getCapturedState() {
@@ -138,7 +179,7 @@ CapturedPlayer::CAPTURED_STATES & CapturedPlayer::getCapturedState() {
 }
 
 void CapturedPlayer::handleStates() {
-    if (!this->nextLevel) {
+    if (!this->savedNextLevel) {
         switch (this->currentCapturedState) {
             case normal:
                 switch (this->currentState) {
@@ -161,6 +202,12 @@ void CapturedPlayer::handleStates() {
                 break;
             case onlyCapturedWithBoss:
                 this->handleOnlyCapturedWithBossState();
+                break;
+            case bossShotInFormation:
+                this->handleBossShotInFormationState();
+                break;
+            case bossShotWhileDiving:
+                this->handleBossShotWhileDivingState();
                 break;
         }
     }

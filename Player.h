@@ -13,6 +13,7 @@ public:
     enum STATES {
         alive,
         hit,
+        captured,
         dead
     };
 private:
@@ -24,6 +25,10 @@ private:
     std::shared_ptr<sf::Texture> deathTexture;
 
     std::shared_ptr<sf::Time> deltaTime;
+
+    sf::Vector2<float> startPos;
+
+    bool doubledPlayer;
 
     sf::Time playerShootTimer;
     sf::Time playerShootCooldown;
@@ -41,9 +46,13 @@ private:
 
     bool deathAnimationDone;
 
-    bool doubledPlayer;
+    void die(bool tp = false);
 
     void runDeathAnimation();
+
+    void handleHitState();
+    void handleDeadState();
+    void handleStates();
 
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
     void initSprite();
@@ -54,18 +63,14 @@ public:
                     float & velocity, sf::Time & playerShootCooldown, float & spriteScale);
     ~Player() = default;
 
-    void die();
     void toGetHit();
+    void toGetCaptured();
 
     void respawn();
 
     void move(const float x, const float y);
 
     bool canAttack();
-
-    void handleHitState();
-    void handleDeadState();
-    void handleStates();
 
     void update();
 
@@ -76,6 +81,7 @@ public:
     sf::FloatRect getGlobalBounds();
     sf::FloatRect getLocalBounds();
     sf::Vector2<float> getOrigin();
+    sf::Vector2<float> & getStartPos();
 };
 
 
