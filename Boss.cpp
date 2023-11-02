@@ -72,6 +72,7 @@ void Boss::handleCaptureBeam() {
                 this->sprite.move((direction / distance) * movement);
             } else {
                 this->joinFormation();
+                this->capturing = false;
             }
         }
     }

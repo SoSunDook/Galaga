@@ -633,7 +633,6 @@ void Game::updateBullets() {
             ++iter;
         }
     }
-    std::cout << this->enemyBullets.size() << '\n';
 }
 
 void Game::updatePlayers() {
@@ -1297,7 +1296,7 @@ void Game::handleEVP() {
                 this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotInFormation) && this->capturedPlayer->canAttack()) {
                     auto newBullet = this->initNewEnBullet();
 
-                    sf::Vector2<float> pos = this->capturedPlayer->getGlobalBounds().getPosition() + this->capturedPlayer->getOrigin() * this->enemiesScale;
+                    sf::Vector2<float> pos = this->capturedPlayer->getGlobalBounds().getPosition() + this->capturedPlayer->getOrigin() * this->playersScale;
                     sf::Vector2<float> distance = (this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale) - pos;
 
                     float tmp_bvl = this->enemyBulletsVelocity;
@@ -1322,7 +1321,7 @@ void Game::handleEVP() {
                     newBullet->setDirection(tmp_vel, tmp_bvl);
 
                     auto pos_x = pos.x;
-                    auto pos_y = pos.y + this->capturedPlayer->getOrigin().y * this->enemiesScale + newBullet->getOrigin().y;
+                    auto pos_y = pos.y + this->capturedPlayer->getOrigin().y * this->playersScale + newBullet->getOrigin().y;
                     newBullet->setPosition(pos_x, pos_y);
                     newBullet->setRotation(180);
                     this->enemyBullets.push_back(newBullet);
@@ -1341,6 +1340,11 @@ void Game::handleEVP() {
                 if (this->player->getGlobalBoundsMain().intersects(en_bullet_iter->get()->getGlobalBounds())) {
                     en_bullet_iter = this->enemyBullets.erase(en_bullet_iter);
                     this->player->toGetHit();
+                    bullet_deleted = true;
+                    break;
+                } else if (this->player->getDoubledPlayer() && this->player->getCurrentDoubledState() != Player::STATES::dead && en_bullet_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsDoubled())) {
+                    en_bullet_iter = this->enemyBullets.erase(en_bullet_iter);
+                    this->player->toGetHit(true);
                     bullet_deleted = true;
                     break;
                 }
