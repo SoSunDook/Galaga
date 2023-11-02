@@ -21,6 +21,10 @@ CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_pt
     this->spriteChanged = false;
     this->savedNextLevel = false;
     this->reachedFirstEndPoint = false;
+    this->playerDoubled = false;
+    this->playerRespawnUnDoubled = false;
+    this->playerLocked = false;
+    this->visitedLastRespawn = false;
     this->deltaTime = timer;
     this->relatedBoss = divingBoss;
     this->startPos = {this->relatedBoss->getGlobalBounds().getPosition().x + this->relatedBoss->getOrigin().x * this->relatedBoss->getSpriteScale(),
@@ -131,8 +135,7 @@ void CapturedPlayer::handleBossShotWhileDivingState() {
             this->setWantedRotation(zeroRotation);
         }
         if (this->playerLocked) {
-            sf::Vector2f endPoint = this->relatedPlayer->getGlobalBounds().getPosition() + this->relatedPlayer->getOrigin() * this->spriteScale;
-            endPoint = {endPoint.x + this->relatedPlayer->getOrigin().x * this->spriteScale * 2.f, endPoint.y};
+            sf::Vector2f endPoint = {this->relatedPlayer->getStartPos().x + this->sprite.getOrigin().x * this->spriteScale, this->relatedPlayer->getStartPos().y};
             sf::Vector2f direction = endPoint - this->sprite.getPosition();
             float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
             float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
@@ -142,6 +145,23 @@ void CapturedPlayer::handleBossShotWhileDivingState() {
                 this->currentState = Enemy::STATES::dead;
                 this->playerLocked = false;
                 this->playerDoubled = true;
+                sf::Vector2<int> point(0, 0);
+                sf::Vector2<int> vector(0, 0);
+                const sf::Rect<int> rectangle(point, vector);
+                this->sprite.setTextureRect(rectangle);
+            }
+        }
+        if ((!this->visitedLastRespawn) && (this->relatedPlayer->getHealth() == 0 && this->relatedPlayer->getCurrentState() == Player::STATES::dead)) {
+            sf::Vector2f endPoint = {this->relatedPlayer->getStartPos().x + this->sprite.getOrigin().x * this->spriteScale, this->relatedPlayer->getStartPos().y};
+            sf::Vector2f direction = endPoint - this->sprite.getPosition();
+            float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+            float movement = this->velocity * static_cast<float>(this->deltaTime->asMilliseconds());
+            if (distance > movement) {
+                this->sprite.move((direction / distance) * movement);
+            } else {
+                this->currentState = Enemy::STATES::dead;
+                this->playerRespawnUnDoubled = true;
+                this->visitedLastRespawn = true;
                 sf::Vector2<int> point(0, 0);
                 sf::Vector2<int> vector(0, 0);
                 const sf::Rect<int> rectangle(point, vector);

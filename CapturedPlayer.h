@@ -41,6 +41,8 @@ private:
 
     bool spriteChanged;
 
+    bool visitedLastRespawn;
+
     bool reachedFirstEndPoint;
 
     void initSprite() override;
@@ -50,6 +52,7 @@ public:
     bool savedNextLevel;
 
     bool playerDoubled;
+    bool playerRespawnUnDoubled;
 public:
     explicit CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
                   std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedPlayerTexture, std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,

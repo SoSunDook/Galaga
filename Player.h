@@ -19,6 +19,7 @@ public:
 private:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
+    sf::Sprite spriteDoubled;
 
     float spriteScale;
 
@@ -38,6 +39,7 @@ private:
     int healthPoints;
 
     STATES currentState;
+    STATES currentDoubledSate;
 
     int deathSpriteDivisor = 4;
     float deathAnimationTimer;
@@ -46,12 +48,20 @@ private:
 
     bool deathAnimationDone;
 
-    void die(bool tp = false);
+    float deathAnimationDoubledTimer;
+    int currentDeathAnimationDoubledFrame;
+
+    bool deathAnimationDoubledDone;
+
+    void die(bool instant = false);
+    void dieDouble();
 
     void runDeathAnimation();
+    void runDeathDoubledAnimation();
 
     void handleHitState();
     void handleDeadState();
+    void handleDeadDoubledState();
     void handleStates();
 
     void initTexture(std::shared_ptr<sf::Texture> & managedTexture);
@@ -63,10 +73,12 @@ public:
                     float & velocity, sf::Time & playerShootCooldown, float & spriteScale);
     ~Player() = default;
 
-    void toGetHit();
+    void toGetHit(bool side = false);
     void toGetCaptured();
 
-    void respawn();
+    void respawn(bool normal = true);
+
+    void toDouble();
 
     void move(const float x, const float y);
 
@@ -76,9 +88,12 @@ public:
 
     void render(sf::RenderTarget & target);
 
+    bool & getDoubledPlayer();
     int & getHealth();
     STATES & getCurrentState();
-    sf::FloatRect getGlobalBounds();
+    STATES & getCurrentDoubledState();
+    sf::FloatRect getGlobalBoundsMain();
+    sf::FloatRect getGlobalBoundsDoubled();
     sf::FloatRect getLocalBounds();
     sf::Vector2<float> getOrigin();
     sf::Vector2<float> & getStartPos();

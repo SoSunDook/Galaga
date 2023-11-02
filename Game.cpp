@@ -521,9 +521,6 @@ void Game::initPlayer() {
 
 std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
     auto newBullet = std::make_shared<PlayerBullet>(this->textureManager["bulletPlayer"], this->bulletsScale, this->bulletsVelocity);
-    auto pos_x = this->player->getGlobalBounds().getPosition().x + this->player->getOrigin().x * this->playersScale;
-    auto pos_y = this->player->getGlobalBounds().getPosition().y - newBullet->getGlobalBounds().getSize().y / 2;
-    newBullet->setPosition(pos_x, pos_y);
     return newBullet;
 }
 
@@ -546,11 +543,15 @@ void Game::updateDeltaTime() {
 
 void Game::updateInput() {
     if (this->player->getCurrentState() == Player::STATES::alive) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+            this->player->toGetHit();
+        }
         bool canMove;
+        bool canShoot = true;
         if (this->capturedPlayer) {
             if (this->capturedPlayer->getCurrentState() != Enemy::STATES::dead && this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving) {
                 sf::Vector2<float> lockPoint = {this->player->getStartPos().x - this->player->getOrigin().x * this->playersScale, this->player->getStartPos().y};
-                sf::Vector2<float> currentPlayerPos = {this->player->getGlobalBounds().getPosition() + this->player->getOrigin() * this->playersScale};
+                sf::Vector2<float> currentPlayerPos = {this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale};
                 auto difference = currentPlayerPos.x - lockPoint.x;
                 if ((difference > 0 ? difference : -difference) < 5) {
                     this->capturedPlayer->playerLocked = true;
@@ -560,6 +561,9 @@ void Game::updateInput() {
                 canMove = false;
             } else {
                 canMove = true;
+            }
+            if (this->capturedPlayer->getCurrentState() != Enemy::STATES::dead && this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving) {
+                canShoot = false;
             }
         } else {
             canMove = true;
@@ -571,12 +575,32 @@ void Game::updateInput() {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
                 this->player->move(1.f, 0.f);
             }
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
-                auto newBullet = this->initNewPlBullet();
-                auto tmp_bvl = -this->bulletsVelocity;
-                auto tmp_vel = 0.f;
-                newBullet->setDirection(tmp_vel, tmp_bvl);
-                this->playerBullets.push_back(newBullet);
+            if (canShoot) {
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
+                    auto newBullet = this->initNewPlBullet();
+                    auto tmp_bvl = -this->bulletsVelocity;
+                    auto tmp_vel = 0.f;
+                    newBullet->setDirection(tmp_vel, tmp_bvl);
+                    auto pos_x = this->player->getGlobalBoundsMain().getPosition().x +
+                                 this->player->getOrigin().x * this->playersScale;
+                    auto pos_y = this->player->getGlobalBoundsMain().getPosition().y -
+                                 newBullet->getGlobalBounds().getSize().y / 2;
+                    newBullet->setPosition(pos_x, pos_y);
+                    this->playerBullets.push_back(newBullet);
+                    if (this->player->getDoubledPlayer() &&
+                        this->player->getCurrentDoubledState() != Player::STATES::dead) {
+                        newBullet = this->initNewPlBullet();
+                        tmp_bvl = -this->bulletsVelocity;
+                        tmp_vel = 0.f;
+                        newBullet->setDirection(tmp_vel, tmp_bvl);
+                        pos_x = this->player->getGlobalBoundsDoubled().getPosition().x +
+                                this->player->getOrigin().x * this->playersScale;
+                        pos_y = this->player->getGlobalBoundsDoubled().getPosition().y -
+                                newBullet->getGlobalBounds().getSize().y / 2;
+                        newBullet->setPosition(pos_x, pos_y);
+                        this->playerBullets.push_back(newBullet);
+                    }
+                }
             }
         }
     }
@@ -598,6 +622,12 @@ void Game::updateBullets() {
 
 void Game::updatePlayers() {
     this->player->update();
+    if (this->capturedPlayer) {
+        if (this->capturedPlayer->playerDoubled) {
+            this->player->toDouble();
+            this->capturedPlayer->playerDoubled = false;
+        }
+    }
 }
 
 bool Game::enemyFlyingIn() {
@@ -728,6 +758,10 @@ void Game::handleFormation() {
                             this->player->respawn();
                             this->respawningTimer = 0.f;
                         }
+                    }
+                    if (this->capturedPlayer && this->capturedPlayer->playerRespawnUnDoubled) {
+                        this->player->respawn(false);
+                        this->capturedPlayer->playerRespawnUnDoubled = false;
                     }
                 }
             }
@@ -1032,8 +1066,15 @@ void Game::handleEVP() {
         for (auto zako_iter = this->formationZakos.begin(); (zako_iter != this->formationZakos.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
             if (*zako_iter) {
                 if (zako_iter->get()->getCurrentState() != Enemy::STATES::dead) {
-                    if (zako_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBounds())) {
+                    if (zako_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                         this->player->toGetHit();
+                        zako_iter->get()->die();
+                        if (zako_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            this->aliveCountZako--;
+                        }
+                        break;
+                    } else if (this->player->getDoubledPlayer() && this->player->getCurrentDoubledState() != Player::STATES::dead && zako_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsDoubled())) {
+                        this->player->toGetHit(true);
                         zako_iter->get()->die();
                         if (zako_iter->get()->getCurrentState() == Enemy::STATES::dead) {
                             this->aliveCountZako--;
@@ -1052,8 +1093,15 @@ void Game::handleEVP() {
         for (auto goei_iter = this->formationGoeis.begin(); (goei_iter != this->formationGoeis.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
             if (*goei_iter) {
                 if (goei_iter->get()->getCurrentState() != Enemy::STATES::dead) {
-                    if (goei_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBounds())) {
+                    if (goei_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                         this->player->toGetHit();
+                        goei_iter->get()->die();
+                        if (goei_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            this->aliveCountGoei--;
+                        }
+                        break;
+                    } else if (this->player->getDoubledPlayer() && this->player->getCurrentDoubledState() != Player::STATES::dead && goei_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsDoubled())) {
+                        this->player->toGetHit(true);
                         goei_iter->get()->die();
                         if (goei_iter->get()->getCurrentState() == Enemy::STATES::dead) {
                             this->aliveCountGoei--;
@@ -1072,7 +1120,7 @@ void Game::handleEVP() {
         for (auto boss_iter = this->formationBosses.begin(); (boss_iter != this->formationBosses.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
             if (*boss_iter) {
                 if (boss_iter->get()->getCurrentState() != Enemy::STATES::dead) {
-                    if (boss_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBounds())) {
+                    if (boss_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                         this->player->toGetHit();
                         boss_iter->get()->die();
                         if (boss_iter->get()->getCurrentState() == Enemy::STATES::dead) {
@@ -1080,6 +1128,13 @@ void Game::handleEVP() {
                                 CapturedPlayer::CAPTURED_STATES state = CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving;
                                 this->capturedPlayer->setCapturedState(state);
                             }
+                            this->aliveCountBoss--;
+                        }
+                        break;
+                    } else if (this->player->getDoubledPlayer() && this->player->getCurrentDoubledState() != Player::STATES::dead && boss_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsDoubled())) {
+                        this->player->toGetHit(true);
+                        boss_iter->get()->die();
+                        if (boss_iter->get()->getCurrentState() == Enemy::STATES::dead) {
                             this->aliveCountBoss--;
                         }
                         break;
@@ -1096,11 +1151,11 @@ void Game::handleEVP() {
 
         if (this->divingBoss && this->divingBoss->getCurrentState() == Enemy::STATES::dive) {
             if (this->divingBoss->getCapturing()) {
-                if (this->divingBoss->getCaptureBeam().getGlobalBounds().intersects(this->player->getGlobalBounds())) {
+                if (this->divingBoss->getCaptureBeam().getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                     this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime, this->formation, this->divingBoss, this->player,
                                                                      this->textureManager["explosion"], this->textureManager["galaga"], this->textureManager["galagaRed"],
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->playersScale, this->divingBoss->getIndex());
-                    auto playerPosition = this->player->getGlobalBounds().getPosition() + this->player->getOrigin() * this->playersScale;
+                    auto playerPosition = this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale;
                     this->capturedPlayer->setPosition(playerPosition.x, playerPosition.y);
                     this->player->toGetCaptured();
                     this->divingBoss->captured = true;
@@ -1134,10 +1189,6 @@ void Game::updateEnemies() {
         if (this->capturedPlayer->savedNextLevel) {
             this->savedCapturedPlayer = true;
             this->savedCapturedPlayerIndex = this->capturedPlayer->getIndex();
-        }
-        if (this->capturedPlayer->playerDoubled) {
-//            toDouble
-            this->capturedPlayer->playerDoubled = false;
         }
     }
 }

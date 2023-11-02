@@ -42,8 +42,13 @@ Player::Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> &
     this->currentDeathAnimationFrame = {};
     this->deathAnimationDone = {};
     this->currentState = STATES::alive;
+    this->currentDoubledSate = STATES::alive;
     this->healthPoints = 3;
     this->doubledPlayer = false;
+    this->spriteDoubled = {};
+    this->deathAnimationDoubledTimer = {};
+    this->currentDeathAnimationDoubledFrame = {};
+    this->deathAnimationDoubledDone = {};
     this->initTexture(managedTexture);
     this->deathTexture = managedDeathTexture;
     this->initSprite();
@@ -53,6 +58,13 @@ Player::Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> &
 
 void Player::render(sf::RenderTarget & target) {
     target.draw(this->sprite);
+    if (this->doubledPlayer) {
+        target.draw(this->spriteDoubled);
+    } else {
+        if (!this->deathAnimationDoubledDone) {
+            target.draw(this->spriteDoubled);
+        }
+    }
 }
 
 void Player::runDeathAnimation() {
@@ -79,14 +91,49 @@ void Player::runDeathAnimation() {
     }
 }
 
+void Player::runDeathDoubledAnimation() {
+    if (!this->deathAnimationDoubledDone) {
+        this->deathAnimationDoubledTimer += this->deltaTime->asSeconds();
+        if (this->deathAnimationDoubledTimer >= this->deathAnimationDelay) {
+            auto size = this->deathTexture->getSize();
+            auto frame_x = static_cast<int>(size.x) / this->deathSpriteDivisor;
+            sf::Vector2<int> point(frame_x * this->currentDeathAnimationDoubledFrame, 0);
+            sf::Vector2<int> vector(static_cast<int>(size.x) / this->deathSpriteDivisor, static_cast<int>(size.y));
+            const sf::Rect<int> rectangle(point, vector);
+            this->spriteDoubled.setTextureRect(rectangle);
+            if (this->currentDeathAnimationDoubledFrame < this->deathSpriteDivisor) {
+                this->currentDeathAnimationDoubledFrame++;
+                this->deathAnimationDoubledTimer = 0.f;
+            } else {
+                this->deathAnimationDoubledDone = true;
+                sf::Vector2<int> point(0, 0);
+                sf::Vector2<int> vector(0, 0);
+                const sf::Rect<int> rectangle(point, vector);
+                this->spriteDoubled.setTextureRect(rectangle);
+            }
+        }
+    }
+}
+
 void Player::move(const float x, const float y) {
     auto new_x = this->velocity * x;
     auto new_y = this->velocity * y;
     auto leftBorder = this->sprite.getOrigin().x * this->spriteScale;
-    auto rightBorder = 720.f - this->sprite.getOrigin().x * this->spriteScale;
-    auto currentLocX = this->sprite.getPosition().x;
-    if ((currentLocX + new_x < rightBorder) && (currentLocX + new_x > leftBorder)) {
-        this->sprite.move(new_x, new_y);
+    float rightBorder;
+    if (!this->doubledPlayer || this->currentDoubledSate == STATES::dead) {
+        rightBorder = 720.f - this->sprite.getOrigin().x * this->spriteScale;
+        auto currentLocX = this->sprite.getPosition().x;
+        if ((currentLocX + new_x < rightBorder) && (currentLocX + new_x > leftBorder)) {
+            this->sprite.move(new_x, new_y);
+        }
+    } else {
+        rightBorder = 720.f - this->spriteDoubled.getOrigin().x * this->spriteScale;
+        auto currentLocLeft = this->sprite.getPosition().x;
+        auto currentLocRight = this->spriteDoubled.getPosition().x;
+        if ((currentLocRight + new_x < rightBorder) && (currentLocLeft + new_x > leftBorder)) {
+            this->sprite.move(new_x, new_y);
+            this->spriteDoubled.move(new_x, new_y);
+        }
     }
 }
 
@@ -96,6 +143,10 @@ void Player::handleHitState() {
 
 void Player::handleDeadState() {
     this->runDeathAnimation();
+}
+
+void Player::handleDeadDoubledState() {
+    this->runDeathDoubledAnimation();
 }
 
 void Player::handleStates() {
@@ -113,6 +164,29 @@ void Player::handleStates() {
         default:
             break;
     }
+    if (this->doubledPlayer) {
+        switch (this->currentDoubledSate) {
+            case STATES::alive:
+                break;
+            case STATES::dead:
+                this->handleDeadDoubledState();
+                break;
+            default:
+                break;
+        }
+    } else {
+        if (!this->deathAnimationDoubledDone) {
+            switch (this->currentDoubledSate) {
+                case STATES::alive:
+                    break;
+                case STATES::dead:
+                    this->handleDeadDoubledState();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
 }
 
 void Player::update() {
@@ -128,8 +202,8 @@ bool Player::canAttack() {
     return false;
 }
 
-void Player::die(bool tp) {
-    if (!tp) {
+void Player::die(bool instant) {
+    if (!instant) {
         this->deathAnimationDone = false;
         this->currentDeathAnimationFrame = 0;
         this->sprite.setTexture(*this->deathTexture);
@@ -151,14 +225,58 @@ void Player::die(bool tp) {
     }
 }
 
+void Player::dieDouble() {
+    this->deathAnimationDoubledDone = false;
+    this->currentDeathAnimationDoubledFrame = 0;
+    this->spriteDoubled.setTexture(*this->deathTexture);
+    this->spriteDoubled.setScale(2, 2);
+    auto size = this->deathTexture->getSize();
+    sf::Vector2<int> point(0, 0);
+    sf::Vector2<int> vector(static_cast<int>(size.x) / this->deathSpriteDivisor, static_cast<int>(size.y));
+    const sf::Rect<int> rectangle(point, vector);
+    this->spriteDoubled.setTextureRect(rectangle);
+    this->spriteDoubled.setOrigin(this->spriteDoubled.getLocalBounds().getSize() / 2.f);
+    float zeroRotation = 0;
+    this->spriteDoubled.setRotation(zeroRotation);
+}
 
-void Player::toGetHit() {
-    this->healthPoints--;
-    this->die();
-    if (this->healthPoints != 0) {
-        this->currentState = STATES::hit;
+void Player::toDouble() {
+    this->doubledPlayer = true;
+    this->currentDoubledSate = STATES::alive;
+
+    this->spriteDoubled.setTexture(*this->texture);
+    this->spriteDoubled.setScale(this->spriteScale, this->spriteScale);
+    auto size = this->texture->getSize();
+    sf::Vector2<int> point(0, 0);
+    sf::Vector2<int> vector(static_cast<int>(size.x), static_cast<int>(size.y));
+    const sf::Rect<int> rectangle(point, vector);
+    this->spriteDoubled.setTextureRect(rectangle);
+
+    this->spriteDoubled.setOrigin(this->spriteDoubled.getLocalBounds().getSize() / 2.f);
+
+    sf::Vector2<float> pos = {this->sprite.getGlobalBounds().getPosition().x + (this->sprite.getOrigin().x * this->spriteScale * 3), this->sprite.getGlobalBounds().getPosition().y + this->sprite.getOrigin().y * this->spriteScale};
+    this->spriteDoubled.setPosition(pos);
+}
+
+void Player::toGetHit(bool side) {
+    if (!this->doubledPlayer) {
+        this->healthPoints--;
+        this->die();
+        if (this->healthPoints > 0) {
+            this->currentState = STATES::hit;
+        } else {
+            this->currentState = STATES::dead;
+        }
     } else {
-        this->currentState = STATES::dead;
+        if (!side) {
+            std::swap(this->sprite, this->spriteDoubled);
+            std::swap(this->deathAnimationTimer, this->deathAnimationDoubledTimer);
+            std::swap(this->currentDeathAnimationFrame, this->currentDeathAnimationDoubledFrame);
+            std::swap(this->deathAnimationDone, this->deathAnimationDoubledDone);
+        }
+        this->dieDouble();
+        this->currentDoubledSate = STATES::dead;
+        this->doubledPlayer = false;
     }
 }
 
@@ -172,10 +290,16 @@ void Player::toGetCaptured() {
     }
 }
 
-void Player::respawn() {
+void Player::respawn(bool normal) {
     this->initSprite();
     this->initOrigin();
-    this->setStartPos();
+    if (normal) {
+        this->setStartPos();
+    } else {
+        sf::Vector2<float> pos = {this->startPos.x + this->sprite.getOrigin().x * this->spriteScale, this->startPos.y};
+        this->sprite.setPosition(pos);
+        this->healthPoints++;
+    }
     this->currentState = STATES::alive;
 }
 
@@ -183,12 +307,24 @@ int & Player::getHealth() {
     return this->healthPoints;
 }
 
+bool & Player::getDoubledPlayer() {
+    return this->doubledPlayer;
+}
+
 Player::STATES & Player::getCurrentState() {
     return this->currentState;
 }
 
-sf::FloatRect Player::getGlobalBounds() {
+Player::STATES & Player::getCurrentDoubledState() {
+    return this->currentDoubledSate;
+}
+
+sf::FloatRect Player::getGlobalBoundsMain() {
     return this->sprite.getGlobalBounds();
+}
+
+sf::FloatRect Player::getGlobalBoundsDoubled() {
+    return this->spriteDoubled.getGlobalBounds();
 }
 
 sf::FloatRect Player::getLocalBounds() {
