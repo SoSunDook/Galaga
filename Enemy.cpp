@@ -80,8 +80,51 @@ void Enemy::render(sf::RenderTarget & target) {
 //
 }
 
-void Enemy::updateAttack() {
-    this->enemyShootTimer += this->deltaTime.operator*();
+void Enemy::handleFlyInDiveAnimation() {
+    auto module = static_cast<float>(std::fmod(this->sprite.getRotation(), 60.0));
+    auto size = this->texture->getSize();
+    sf::Vector2<int> point;
+    sf::Vector2<int> vector(static_cast<int>(size.x) / this->spriteDivisor, static_cast<int>(size.y));
+    if (module <= 30) {
+        point = {static_cast<int>(size.x) / this->spriteDivisor, 0};
+    } else {
+        point = {0, 0};
+    }
+    const sf::Rect<int> rectangle(point, vector);
+    this->sprite.setTextureRect(rectangle);
+}
+
+void Enemy::handleFormationAnimation() {
+    if (this->formationPtr->changedTick()) {
+        auto size = this->texture->getSize();
+        sf::Vector2<int> point;
+        sf::Vector2<int> vector(static_cast<int>(size.x) / this->spriteDivisor, static_cast<int>(size.y));
+        if (this->formationPtr->getTick() % 2 == 0) {
+            point = {static_cast<int>(size.x) / this->spriteDivisor, 0};
+        } else {
+            point = {0, 0};
+        }
+        const sf::Rect<int> rectangle(point, vector);
+        this->sprite.setTextureRect(rectangle);
+    }
+}
+
+void Enemy::handleAnimation() {
+    if (this->type != Enemy::TYPES::capturedPlayer) {
+        switch (this->currentState) {
+            case flyIn:
+                this->handleFlyInDiveAnimation();
+                break;
+            case formation:
+                this->handleFormationAnimation();
+                break;
+            case dive:
+                this->handleFlyInDiveAnimation();
+                break;
+            case dead:
+                break;
+        }
+    }
 }
 
 void Enemy::updateRotation() {
@@ -121,9 +164,9 @@ void Enemy::updateRotation() {
 }
 
 void Enemy::update() {
-    this->updateAttack();
     this->handleStates();
     this->updateRotation();
+    this->handleAnimation();
 }
 
 bool Enemy::canAttack() {

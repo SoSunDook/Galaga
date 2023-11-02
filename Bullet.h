@@ -28,6 +28,7 @@ public:
 
     void setPosition(float & pos_x, float & pos_y);
     void setDirection(float & new_dir_x, float & new_dir_y);
+    void setRotation(const float & rotation);
 
     void update();
 

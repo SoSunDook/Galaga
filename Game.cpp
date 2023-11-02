@@ -8,12 +8,13 @@ void Game::initConstants() {
     this->clock = {};
 
     this->playerVelocity = 1.f;
-    this->bulletsVelocity = 1.f;
+    this->playerBulletsVelocity = 1.f;
     this->enemyVelocity = 0.6f;
+    this->enemyBulletsVelocity = 0.8f;
     this->enemyRotationVelocity = 5.4f;
 
     this->playerShootCooldown = sf::milliseconds(350);
-    this->enemyShootCooldown = sf::milliseconds(350);
+    this->enemyShootCooldown = sf::milliseconds(3000);
 
     this->bulletsScale = 3.f;
     this->enemiesScale = 3.f;
@@ -520,7 +521,12 @@ void Game::initPlayer() {
 }
 
 std::shared_ptr<PlayerBullet> Game::initNewPlBullet() {
-    auto newBullet = std::make_shared<PlayerBullet>(this->textureManager["bulletPlayer"], this->bulletsScale, this->bulletsVelocity);
+    auto newBullet = std::make_shared<PlayerBullet>(this->textureManager["bulletPlayer"], this->bulletsScale, this->playerBulletsVelocity);
+    return newBullet;
+}
+
+std::shared_ptr<EnemyBullet> Game::initNewEnBullet() {
+    auto newBullet = std::make_shared<EnemyBullet>(this->textureManager["enemyBullet"], this->bulletsScale, this->enemyBulletsVelocity);
     return newBullet;
 }
 
@@ -543,9 +549,6 @@ void Game::updateDeltaTime() {
 
 void Game::updateInput() {
     if (this->player->getCurrentState() == Player::STATES::alive) {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-            this->player->toGetHit();
-        }
         bool canMove;
         bool canShoot = true;
         if (this->capturedPlayer) {
@@ -578,7 +581,7 @@ void Game::updateInput() {
             if (canShoot) {
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
                     auto newBullet = this->initNewPlBullet();
-                    auto tmp_bvl = -this->bulletsVelocity;
+                    auto tmp_bvl = -this->playerBulletsVelocity;
                     auto tmp_vel = 0.f;
                     newBullet->setDirection(tmp_vel, tmp_bvl);
                     auto pos_x = this->player->getGlobalBoundsMain().getPosition().x +
@@ -590,7 +593,7 @@ void Game::updateInput() {
                     if (this->player->getDoubledPlayer() &&
                         this->player->getCurrentDoubledState() != Player::STATES::dead) {
                         newBullet = this->initNewPlBullet();
-                        tmp_bvl = -this->bulletsVelocity;
+                        tmp_bvl = -this->playerBulletsVelocity;
                         tmp_vel = 0.f;
                         newBullet->setDirection(tmp_vel, tmp_bvl);
                         pos_x = this->player->getGlobalBoundsDoubled().getPosition().x +
@@ -612,12 +615,25 @@ void Game::updateBullets() {
 //        Bounds check
         if ((iter->get()->getGlobalBounds().getPosition().y <= (-(iter->get()->getLocalBounds().getSize().y * this->bulletsScale)))
         || (iter->get()->getGlobalBounds().getPosition().x <= (-(iter->get()->getLocalBounds().getSize().x * this->bulletsScale)))
-        || (iter->get()->getGlobalBounds().getPosition().x >= static_cast<float>(this->window->getSize().x))) {
+        || (iter->get()->getGlobalBounds().getPosition().x >= 720.f)) {
             iter = this->playerBullets.erase(iter);
         } else {
             ++iter;
         }
     }
+
+    for (auto iter = this->enemyBullets.begin(); iter != this->enemyBullets.end(); ) {
+        iter->get()->update();
+//        Bounds check
+        if ((iter->get()->getGlobalBounds().getPosition().y >= 720.f)
+        || (iter->get()->getGlobalBounds().getPosition().x <= (-(iter->get()->getLocalBounds().getSize().x * this->bulletsScale)))
+        || (iter->get()->getGlobalBounds().getPosition().x >= 720.f)) {
+            iter = this->enemyBullets.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    std::cout << this->enemyBullets.size() << '\n';
 }
 
 void Game::updatePlayers() {
@@ -1055,6 +1071,16 @@ void Game::handlePVE() {
             }
         }
 
+        if (this->capturedPlayer) {
+            if (this->capturedPlayer->getCurrentState() != Enemy::STATES::dead) {
+                if (this->capturedPlayer->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
+                    pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
+                    this->capturedPlayer->hit();
+                    bullet_deleted = true;
+                }
+            }
+        }
+
         if (!bullet_deleted) {
             ++pl_bullet_iter;
         }
@@ -1066,6 +1092,40 @@ void Game::handleEVP() {
         for (auto zako_iter = this->formationZakos.begin(); (zako_iter != this->formationZakos.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
             if (*zako_iter) {
                 if (zako_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (zako_iter->get()->getCurrentState() == Enemy::STATES::dive && zako_iter->get()->canAttack()) {
+                        auto newBullet = this->initNewEnBullet();
+
+                        sf::Vector2<float> pos = zako_iter->get()->getGlobalBounds().getPosition() + zako_iter->get()->getOrigin() * this->enemiesScale;
+                        sf::Vector2<float> distance = (this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale) - pos;
+
+                        float tmp_bvl = this->enemyBulletsVelocity;
+                        float tmp_vel;
+
+                        float module = distance.x >= 0 ? distance.x : -distance.x;
+
+                        if (module >= 100) {
+                            tmp_vel = 0.25f;
+                        } else if (module >= 50) {
+                            tmp_vel = 0.15f;
+                        } else if (module >= 20) {
+                            tmp_vel = 0.05f;
+                        } else {
+                            tmp_vel = {};
+                        }
+
+                        if (distance.x < 0) {
+                            tmp_vel = -tmp_vel;
+                        }
+
+                        newBullet->setDirection(tmp_vel, tmp_bvl);
+
+                        auto pos_x = pos.x;
+                        auto pos_y = pos.y + zako_iter->get()->getOrigin().y * this->enemiesScale + newBullet->getOrigin().y;
+                        newBullet->setPosition(pos_x, pos_y);
+                        newBullet->setRotation(180);
+                        this->enemyBullets.push_back(newBullet);
+                    }
+
                     if (zako_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                         this->player->toGetHit();
                         zako_iter->get()->die();
@@ -1093,6 +1153,40 @@ void Game::handleEVP() {
         for (auto goei_iter = this->formationGoeis.begin(); (goei_iter != this->formationGoeis.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
             if (*goei_iter) {
                 if (goei_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (goei_iter->get()->getCurrentState() == Enemy::STATES::dive && goei_iter->get()->canAttack()) {
+                        auto newBullet = this->initNewEnBullet();
+
+                        sf::Vector2<float> pos = goei_iter->get()->getGlobalBounds().getPosition() + goei_iter->get()->getOrigin() * this->enemiesScale;
+                        sf::Vector2<float> distance = (this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale) - pos;
+
+                        float tmp_bvl = this->enemyBulletsVelocity;
+                        float tmp_vel;
+
+                        float module = distance.x >= 0 ? distance.x : -distance.x;
+
+                        if (module >= 100) {
+                            tmp_vel = 0.25f;
+                        } else if (module >= 50) {
+                            tmp_vel = 0.15f;
+                        } else if (module >= 20) {
+                            tmp_vel = 0.05f;
+                        } else {
+                            tmp_vel = {};
+                        }
+
+                        if (distance.x < 0) {
+                            tmp_vel = -tmp_vel;
+                        }
+
+                        newBullet->setDirection(tmp_vel, tmp_bvl);
+
+                        auto pos_x = pos.x;
+                        auto pos_y = pos.y + goei_iter->get()->getOrigin().y * this->enemiesScale + newBullet->getOrigin().y;
+                        newBullet->setPosition(pos_x, pos_y);
+                        newBullet->setRotation(180);
+                        this->enemyBullets.push_back(newBullet);
+                    }
+
                     if (goei_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                         this->player->toGetHit();
                         goei_iter->get()->die();
@@ -1120,6 +1214,40 @@ void Game::handleEVP() {
         for (auto boss_iter = this->formationBosses.begin(); (boss_iter != this->formationBosses.end()) && (this->player->getCurrentState() == Player::STATES::alive); ) {
             if (*boss_iter) {
                 if (boss_iter->get()->getCurrentState() != Enemy::STATES::dead) {
+                    if (boss_iter->get()->getCurrentState() == Enemy::STATES::dive && boss_iter->get()->canAttack()) {
+                        auto newBullet = this->initNewEnBullet();
+
+                        sf::Vector2<float> pos = boss_iter->get()->getGlobalBounds().getPosition() + boss_iter->get()->getOrigin() * this->enemiesScale;
+                        sf::Vector2<float> distance = (this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale) - pos;
+
+                        float tmp_bvl = this->enemyBulletsVelocity;
+                        float tmp_vel;
+
+                        float module = distance.x >= 0 ? distance.x : -distance.x;
+
+                        if (module >= 100) {
+                            tmp_vel = 0.25f;
+                        } else if (module >= 50) {
+                            tmp_vel = 0.15f;
+                        } else if (module >= 20) {
+                            tmp_vel = 0.05f;
+                        } else {
+                            tmp_vel = {};
+                        }
+
+                        if (distance.x < 0) {
+                            tmp_vel = -tmp_vel;
+                        }
+
+                        newBullet->setDirection(tmp_vel, tmp_bvl);
+
+                        auto pos_x = pos.x;
+                        auto pos_y = pos.y + boss_iter->get()->getOrigin().y * this->enemiesScale + newBullet->getOrigin().y;
+                        newBullet->setPosition(pos_x, pos_y);
+                        newBullet->setRotation(180);
+                        this->enemyBullets.push_back(newBullet);
+                    }
+
                     if (boss_iter->get()->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                         this->player->toGetHit();
                         boss_iter->get()->die();
@@ -1160,6 +1288,65 @@ void Game::handleEVP() {
                     this->player->toGetCaptured();
                     this->divingBoss->captured = true;
                 }
+            }
+        }
+
+        if (this->capturedPlayer) {
+            if (this->capturedPlayer->getCurrentState() != Enemy::STATES::dead && this->capturedPlayer->getCapturedState() != CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving) {
+                if ((this->capturedPlayer->getCurrentState() == Enemy::STATES::dive ||
+                this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotInFormation) && this->capturedPlayer->canAttack()) {
+                    auto newBullet = this->initNewEnBullet();
+
+                    sf::Vector2<float> pos = this->capturedPlayer->getGlobalBounds().getPosition() + this->capturedPlayer->getOrigin() * this->enemiesScale;
+                    sf::Vector2<float> distance = (this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale) - pos;
+
+                    float tmp_bvl = this->enemyBulletsVelocity;
+                    float tmp_vel;
+
+                    float module = distance.x >= 0 ? distance.x : -distance.x;
+
+                    if (module >= 100) {
+                        tmp_vel = 0.25f;
+                    } else if (module >= 50) {
+                        tmp_vel = 0.15f;
+                    } else if (module >= 20) {
+                        tmp_vel = 0.05f;
+                    } else {
+                        tmp_vel = {};
+                    }
+
+                    if (distance.x < 0) {
+                        tmp_vel = -tmp_vel;
+                    }
+
+                    newBullet->setDirection(tmp_vel, tmp_bvl);
+
+                    auto pos_x = pos.x;
+                    auto pos_y = pos.y + this->capturedPlayer->getOrigin().y * this->enemiesScale + newBullet->getOrigin().y;
+                    newBullet->setPosition(pos_x, pos_y);
+                    newBullet->setRotation(180);
+                    this->enemyBullets.push_back(newBullet);
+                }
+
+                if (this->capturedPlayer->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
+                    this->capturedPlayer->die();
+                    this->player->toGetHit();
+                }
+            }
+        }
+
+        for (auto en_bullet_iter = this->enemyBullets.begin(); en_bullet_iter != this->enemyBullets.end(); ) {
+            bool bullet_deleted = false;
+            if (this->player->getCurrentState() == Player::STATES::alive) {
+                if (this->player->getGlobalBoundsMain().intersects(en_bullet_iter->get()->getGlobalBounds())) {
+                    en_bullet_iter = this->enemyBullets.erase(en_bullet_iter);
+                    this->player->toGetHit();
+                    bullet_deleted = true;
+                    break;
+                }
+            }
+            if (!bullet_deleted) {
+                ++en_bullet_iter;
             }
         }
     }
@@ -1220,6 +1407,10 @@ void Game::render() {
 
     for (auto & playerBullet : this->playerBullets) {
         playerBullet->render(*this->window);
+    }
+
+    for (auto & enemyBullet : this->enemyBullets) {
+        enemyBullet->render(*this->window);
     }
 
     for (auto & zako : this->formationZakos) {

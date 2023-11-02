@@ -92,8 +92,11 @@ protected:
     virtual void handleDeadState();
     virtual void handleStates();
 
+    void handleFlyInDiveAnimation();
+    void handleFormationAnimation();
+    void handleAnimation();
+
     void updateRotation();
-    void updateAttack();
 public:
     Enemy() = default;
     ~Enemy() = default;
@@ -106,7 +109,7 @@ public:
 
     virtual void hit();
 
-    void die();
+    virtual void die();
 
     bool canAttack();
 

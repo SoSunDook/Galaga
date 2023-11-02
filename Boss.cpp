@@ -78,6 +78,12 @@ void Boss::handleCaptureBeam() {
 }
 
 void Boss::handleDiveState() {
+    if (!this->capturing) {
+        if ((this->sprite.getGlobalBounds().getPosition() + this->sprite.getOrigin() * this->spriteScale).y < 570) {
+            this->enemyShootTimer += this->deltaTime.operator*();
+        }
+    }
+
     if (this->currentPoint < this->currentPath->getPath().size()) {
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);

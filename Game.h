@@ -8,6 +8,7 @@
 #include <SFML/System.hpp>
 #include "Player.h"
 #include "PlayerBullet.h"
+#include "EnemyBullet.h"
 #include "Zako.h"
 #include "Goei.h"
 #include "Boss.h"
@@ -36,13 +37,14 @@ private:
     std::vector<std::shared_ptr<Zako>> formationZakos;
     std::vector<std::shared_ptr<Goei>> formationGoeis;
     std::vector<std::shared_ptr<Boss>> formationBosses;
-//    std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
+    std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
 
     std::shared_ptr<Formation> formation;
 
     float playerVelocity;
-    float bulletsVelocity;
+    float playerBulletsVelocity;
     float enemyVelocity;
+    float enemyBulletsVelocity;
     float enemyRotationVelocity;
 
     sf::Time playerShootCooldown;
@@ -104,6 +106,7 @@ private:
     void initSpawningPatterns();
     void initPlayer();
     std::shared_ptr<PlayerBullet> initNewPlBullet();
+    std::shared_ptr<EnemyBullet> initNewEnBullet();
 
     bool enemyFlyingIn();
     void handleSpawning();

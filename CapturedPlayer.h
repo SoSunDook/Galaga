@@ -59,6 +59,8 @@ public:
                   float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
     ~CapturedPlayer() = default;
 
+    void die() override;
+
     void setCapturedState(CAPTURED_STATES & newState);
 
     CAPTURED_STATES & getCapturedState();

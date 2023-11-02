@@ -22,5 +22,6 @@ add_executable(Galaga main.cpp
         Formation.cpp
         CaptureBeam.cpp
         pugixml.cpp
-        CapturedPlayer.cpp)
+        CapturedPlayer.cpp
+        EnemyBullet.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)

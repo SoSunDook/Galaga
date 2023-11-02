@@ -23,6 +23,8 @@ Formation::Formation(std::shared_ptr<sf::Time> & timer) {
     this->gridSize = {24.f, 48.f};
 
     this->locked = false;
+
+    this->changed = false;
 }
 
 sf::Vector2<float> & Formation::getPosition() {
@@ -45,6 +47,7 @@ void Formation::update() {
     if ((!this->locked) || (this->offsetCounter != 4)) {
         this->offsetTimer += this->deltaTime->asSeconds();
         if (this->offsetTimer >= this->offsetDelay) {
+            this->changed = true;
             this->offsetCounter++;
 
             sf::Vector2<float> right{1, 0};
@@ -56,10 +59,13 @@ void Formation::update() {
             }
 
             this->offsetTimer = 0.f;
+        } else {
+            this->changed = false;
         }
     } else {
         this->spreadTimer += this->deltaTime->asSeconds();
         if (this->spreadTimer >= this->spreadDelay) {
+            this->changed = true;
             this->spreadCounter += this->spreadDirection;
 
             this->gridSize.x += static_cast<float>(this->spreadDirection * ((this->spreadCounter % 2 == 0) ? 1 : 2));
@@ -69,6 +75,19 @@ void Formation::update() {
             }
 
             this->spreadTimer = 0.f;
+        } else {
+            this->changed = false;
         }
     }
+}
+
+int Formation::getTick() {
+    if (!this->locked || this->offsetCounter != 4) {
+        return this->offsetCounter;
+    }
+    return this->spreadCounter;
+}
+
+bool & Formation::changedTick() {
+    return this->changed;
 }

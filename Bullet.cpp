@@ -26,6 +26,10 @@ void Bullet::setDirection(float & new_dir_x, float & new_dir_y) {
     this->dir_y = new_dir_y;
 }
 
+void Bullet::setRotation(const float & rotation) {
+    this->sprite.setRotation(rotation);
+}
+
 void Bullet::render(sf::RenderTarget & target) {
     target.draw(this->sprite);
 }

@@ -55,7 +55,14 @@ sf::Vector2<float> CapturedPlayer::localFormationPosition() {
     return pos;
 }
 
+void CapturedPlayer::die() {
+    this->currentCapturedState = CAPTURED_STATES::normal;
+    Enemy::die();
+}
+
 void CapturedPlayer::handleDiveState() {
+    this->enemyShootTimer += this->deltaTime.operator*();
+
     if (this->currentPoint < this->currentPath->getPath().size()) {
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
@@ -173,6 +180,10 @@ void CapturedPlayer::handleBossShotWhileDivingState() {
 
 void CapturedPlayer::handleBossShotInFormationState() {
     if (this->currentPoint < this->currentPath->getPath().size()) {
+        if ((this->sprite.getGlobalBounds().getPosition() + this->sprite.getOrigin() * this->spriteScale).y < 570) {
+            this->enemyShootTimer += this->deltaTime.operator*();
+        }
+
         sf::Vector2f direction = this->currentPath->getPath().at(this->currentPoint) + this->diveStartPosition - this->sprite.getPosition();
         this->setWantedRotation(direction.x, direction.y);
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);

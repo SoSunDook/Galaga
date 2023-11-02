@@ -28,6 +28,8 @@ private:
     sf::Vector2<float> gridSize;
 
     bool locked;
+
+    bool changed;
 public:
     explicit Formation(std::shared_ptr<sf::Time> & timer);
     ~Formation() = default;
@@ -39,6 +41,9 @@ public:
     bool isLocked();
 
     void update();
+
+    int getTick();
+    bool & changedTick();
 };
 
 
