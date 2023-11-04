@@ -25,6 +25,7 @@ CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_pt
     this->playerRespawnUnDoubled = false;
     this->playerLocked = false;
     this->visitedLastRespawn = false;
+    this->visitedSaveNextLevel = false;
     this->deltaTime = timer;
     this->relatedBoss = divingBoss;
     this->startPos = {this->relatedBoss->getGlobalBounds().getPosition().x + this->relatedBoss->getOrigin().x * this->relatedBoss->getSpriteScale(),
@@ -194,9 +195,10 @@ void CapturedPlayer::handleBossShotInFormationState() {
             this->sprite.move((direction / distance) * movement);
         }
 
-        if (this->currentPoint >= this->currentPath->getPath().size()) {
+        if (this->currentPoint >= this->currentPath->getPath().size() && !this->visitedSaveNextLevel) {
             this->currentState = Enemy::STATES::dead;
             this->savedNextLevel = true;
+            this->visitedSaveNextLevel = true;
         }
     }
 }

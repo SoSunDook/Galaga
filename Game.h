@@ -4,124 +4,45 @@
 
 #ifndef GALAGA_GAME_H
 #define GALAGA_GAME_H
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include "Player.h"
-#include "PlayerBullet.h"
-#include "EnemyBullet.h"
-#include "Zako.h"
-#include "Goei.h"
-#include "Boss.h"
-#include "CapturedPlayer.h"
-#include "pugixml.hpp"
-#include <memory>
-#include <string>
-#include <filesystem>
-#include <iostream>
+#include "Level.h"
+#include "Menu.h"
 
 class Game {
 private:
-    std::filesystem::path dir_path;
-    pugi::xml_document spawningPatterns;
-    std::map<std::string, std::shared_ptr<sf::Texture>> textureManager;
-    std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> pathManager;
+    enum STATES {
+        MENU,
+        LEVEL
+    };
 
-    std::unique_ptr<sf::RenderWindow> window;
+    std::shared_ptr<std::filesystem::path> dir_path;
+    std::shared_ptr<sf::Font> font;
+    std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> textureManager;
+    std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> pathManager;
 
     sf::Clock clock;
     std::shared_ptr<sf::Time> deltaTime;
 
-    std::shared_ptr<Player> player;
-    std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
+    std::shared_ptr<sf::RenderWindow> window;
 
-    std::vector<std::shared_ptr<Zako>> formationZakos;
-    std::vector<std::shared_ptr<Goei>> formationGoeis;
-    std::vector<std::shared_ptr<Boss>> formationBosses;
-    std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
+    STATES currentState;
 
-    std::shared_ptr<Formation> formation;
-
-    float playerVelocity;
-    float playerBulletsVelocity;
-    float enemyVelocity;
-    float enemyBulletsVelocity;
-    float enemyRotationVelocity;
-
-    sf::Time playerShootCooldown;
-    sf::Time enemyShootCooldown;
-
-    float bulletsScale;
-    float enemiesScale;
-    float playersScale;
-
-    int maxCountZako;
-    int maxCountGoei;
-    int maxCountBoss;
-
-    int currentCountZako;
-    int currentCountGoei;
-    int currentCountBoss;
-
-    int aliveCountZako;
-    int aliveCountGoei;
-    int aliveCountBoss;
-
-    int currentFlyInPriority;
-    int currentFlyInIndex;
-
-    bool spawningFinished;
-    float spawningDelay;
-    float spawningTimer;
-
-    float respawningDelay;
-    float respawningTimer;
-
-    std::shared_ptr<Goei> divingGoei;
-    bool skipFirstGoei;
-    float goeiDiveDelay;
-    float goeiDiveTimer;
-
-    std::shared_ptr<Zako> firstDivingZako;
-    std::shared_ptr<Zako> secondDivingZako;
-    float zakoDiveDelay;
-    float zakoDiveTimer;
-
-    std::shared_ptr<Boss> divingBoss;
-    bool captureDive;
-    bool skipFirstBoss;
-    float bossDiveDelay;
-    float bossDiveTimer;
-
-    std::shared_ptr<CapturedPlayer> capturedPlayer;
-    bool savedCapturedPlayer;
-    int savedCapturedPlayerIndex;
+    std::unique_ptr<Menu> menu;
+    std::unique_ptr<Level> level;
 
     void initDeltaTime();
     void initConstants();
     void initWindow();
+    void initFont();
     void initTextures();
-    void initFormationVectors();
-    void initFormation();
     void initPaths();
-    void initSpawningPatterns();
-    void initPlayer();
-    std::shared_ptr<PlayerBullet> initNewPlBullet();
-    std::shared_ptr<EnemyBullet> initNewEnBullet();
+    void initMenu();
+    void initLevel();
 
-    bool enemyFlyingIn();
-    void handleSpawning();
-    void handleFormation();
-    void handleDiving();
-
-    void handlePVE();
-    void handleEVP();
+    void handleMenuState();
+    void handleLevelState();
+    void handleStates();
 
     void updateDeltaTime();
-    void updateInput();
-    void updateBullets();
-    void updatePlayers();
-    void updateEnemies();
-    void updateCombat();
     void update();
 
     void render();

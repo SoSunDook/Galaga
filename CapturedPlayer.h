@@ -42,6 +42,7 @@ private:
     bool spriteChanged;
 
     bool visitedLastRespawn;
+    bool visitedSaveNextLevel;
 
     bool reachedFirstEndPoint;
 
