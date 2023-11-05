@@ -485,6 +485,11 @@ Game::Game() {
 
 void Game::handleMenuState() {
     this->menu->update();
+    if (this->menu->getCurrentState() == Menu::STATES::onePlayer) {
+        this->currentState = STATES::LEVEL;
+    } else if (this->menu->getCurrentState() == Menu::STATES::twoPlayers) {
+
+    }
 }
 
 void Game::handleLevelState() {

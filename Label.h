@@ -30,9 +30,15 @@ public:
           const sf::Vector2<float> & endPos);
     ~Label() = default;
 
+    void move(const float & x, const float & y);
+    void setEndPosition();
+    void setPosition(sf::Vector2<float> & pos);
+
     void update(std::string & txt);
 
     void render(sf::RenderTarget & target);
+
+    sf::Vector2<float> getPosition();
 };
 
 

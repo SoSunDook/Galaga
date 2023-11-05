@@ -31,6 +31,18 @@ void Label::initOrigin() {
     this->text.setOrigin(this->text.getLocalBounds().getSize() / 2.f);
 }
 
+void Label::move(const float & x, const float & y) {
+    this->text.move({x, y});
+}
+
+void Label::setEndPosition() {
+    this->text.setPosition(this->endPosition);
+}
+
+void Label::setPosition(sf::Vector2<float> & pos) {
+    this->text.setPosition(pos);
+}
+
 void Label::update(std::string & txt) {
     this->text.setString(txt);
     this->initOrigin();
@@ -38,4 +50,8 @@ void Label::update(std::string & txt) {
 
 void Label::render(sf::RenderTarget & target) {
     target.draw(this->text);
+}
+
+sf::Vector2<float> Label::getPosition() {
+    return this->text.getPosition();
 }
