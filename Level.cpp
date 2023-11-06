@@ -17,11 +17,13 @@ Level::Level(std::shared_ptr<std::filesystem::path> & dirPath,
     this->window = window;
     this->font = font;
     this->initConstants();
+    this->initScoreStage();
     this->initSpawningPatterns();
     this->initFormationVectors();
     this->initFormation();
     this->initPlayer();
     this->initUI();
+    this->initBackground();
 }
 
 void Level::initConstants() {
@@ -82,6 +84,11 @@ void Level::initConstants() {
     this->savedCapturedPlayerIndex = {};
 }
 
+void Level::initScoreStage() {
+    this->currentScore = std::make_shared<int>();
+    this->currentStage = std::make_shared<int>(1);
+}
+
 void Level::initFormationVectors() {
     this->formationZakos.resize(this->maxCountZako);
     this->formationGoeis.resize(this->maxCountGoei);
@@ -107,7 +114,17 @@ void Level::initUI() {
                                     this->textureManager,
                                     this->deltaTime,
                                     this->window,
-                                    this->font);
+                                    this->font,
+                                    this->player->getHealth(),
+                                    this->currentScore,
+                                    this->currentStage);
+}
+
+void Level::initBackground() {
+    this->background = std::make_unique<Background>(this->textureManager,
+                                                    this->deltaTime,
+                                                    sf::Vector2<float>(360.f, 360.f),
+                                                    1.f);
 }
 
 std::shared_ptr<PlayerBullet> Level::initNewPlBullet() {
@@ -288,6 +305,19 @@ void Level::handleSpawning() {
                         this->currentCountBoss++;
                         this->aliveCountBoss++;
 
+                    } else if (type == "capturedPlayer") {
+                        if (this->savedCapturedPlayer) {
+                            if (this->formationBosses[this->savedCapturedPlayerIndex]->getCurrentState() != Enemy::STATES::dead) {
+                                this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime, this->pathManager->operator[](path), this->formation, this->formationBosses[this->savedCapturedPlayerIndex], this->player,
+                                                                     this->textureManager->operator[]("explosion"), this->textureManager->operator[]("galaga"), this->textureManager->operator[]("galagaRed"),
+                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->playersScale, this->savedCapturedPlayerIndex);
+                                this->capturedPlayer->setCapturedState(CapturedPlayer::CAPTURED_STATES::normal);
+                                this->capturedPlayer->setState(Enemy::flyIn);
+                                this->capturedPlayer->initSpriteSaved();
+                            }
+                            this->savedCapturedPlayer = {};
+                            this->savedCapturedPlayerIndex = {};
+                        }
                     }
 
                     spawned = true;
@@ -347,10 +377,10 @@ void Level::handleFormation() {
                             this->respawningTimer = 0.f;
                         }
                     }
-                    if (this->capturedPlayer && this->capturedPlayer->playerRespawnUnDoubled) {
-                        this->player->respawn(false);
-                        this->capturedPlayer->playerRespawnUnDoubled = false;
-                    }
+                }
+                if (this->capturedPlayer && this->capturedPlayer->playerRespawnUnDoubled) {
+                    this->player->respawn(false);
+                    this->capturedPlayer->playerRespawnUnDoubled = false;
                 }
             }
         }
@@ -560,6 +590,48 @@ void Level::handleDiving() {
     }
 }
 
+void Level::handleAllDied() {
+    if (this->aliveCountZako == 0 && this->aliveCountGoei == 0 && this->aliveCountBoss == 0) {
+        if (!this->capturedPlayer) {
+            this->reset();
+            *(this->currentStage) += 1;
+            if (this->capturedPlayer) {
+                if (!this->player->getDoubledPlayer()) {
+                    this->capturedPlayer = {};
+                }
+            }
+        } else {
+            if (this->capturedPlayer->getCurrentState() == Enemy::STATES::dead) {
+                this->reset();
+                *(this->currentStage) += 1;
+                if (this->capturedPlayer) {
+                    if (!this->player->getDoubledPlayer()) {
+                        this->capturedPlayer = {};
+                    }
+                }
+            }
+        }
+    }
+}
+
+void Level::reset() {
+    this->formation->reset();
+
+    this->currentCountZako = {};
+    this->currentCountGoei = {};
+    this->currentCountBoss = {};
+
+    this->aliveCountZako = {};
+    this->aliveCountGoei = {};
+    this->aliveCountBoss = {};
+
+    this->currentFlyInPriority = {};
+    this->currentFlyInIndex = {};
+
+    this->spawningFinished = {};
+    this->spawningTimer = {};
+}
+
 void Level::handlePVE() {
     for (auto pl_bullet_iter = this->playerBullets.begin(); pl_bullet_iter != this->playerBullets.end(); ) {
         bool bullet_deleted = false;
@@ -570,6 +642,7 @@ void Level::handlePVE() {
                         pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
                         zako_iter->get()->hit();
                         if (zako_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            *(this->currentScore) += zako_iter->get()->getWorthPoints();
                             this->aliveCountZako--;
                         }
                         bullet_deleted = true;
@@ -591,6 +664,7 @@ void Level::handlePVE() {
                         pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
                         goei_iter->get()->hit();
                         if (goei_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            *(this->currentScore) += goei_iter->get()->getWorthPoints();
                             this->aliveCountGoei--;
                         }
                         bullet_deleted = true;
@@ -623,11 +697,12 @@ void Level::handlePVE() {
                                     this->capturedPlayer->setPath(this->pathManager->operator[](path));
                                     this->capturedPlayer->toDive();
                                     state = CapturedPlayer::CAPTURED_STATES::bossShotInFormation;
-                                } else if (prev_state == Enemy::STATES::dive) {
+                                } else if (prev_state == Enemy::STATES::dive || prev_state == Enemy::STATES::flyIn) {
                                     state = CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving;
                                 }
                                 this->capturedPlayer->setCapturedState(state);
                             }
+                            *(this->currentScore) += boss_iter->get()->getWorthPoints();
                             this->aliveCountBoss--;
                         }
                         bullet_deleted = true;
@@ -648,6 +723,7 @@ void Level::handlePVE() {
                 if (this->capturedPlayer->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
                     pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
                     this->capturedPlayer->hit();
+                    *(this->currentScore) += this->capturedPlayer->getWorthPoints();
                     bullet_deleted = true;
                 }
             }
@@ -702,6 +778,7 @@ void Level::handleEVP() {
                         this->player->toGetHit();
                         zako_iter->get()->die();
                         if (zako_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            *(this->currentScore) += zako_iter->get()->getWorthPoints();
                             this->aliveCountZako--;
                         }
                         break;
@@ -709,6 +786,7 @@ void Level::handleEVP() {
                         this->player->toGetHit(true);
                         zako_iter->get()->die();
                         if (zako_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            *(this->currentScore) += zako_iter->get()->getWorthPoints();
                             this->aliveCountZako--;
                         }
                         break;
@@ -763,6 +841,7 @@ void Level::handleEVP() {
                         this->player->toGetHit();
                         goei_iter->get()->die();
                         if (goei_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            *(this->currentScore) += goei_iter->get()->getWorthPoints();
                             this->aliveCountGoei--;
                         }
                         break;
@@ -770,6 +849,7 @@ void Level::handleEVP() {
                         this->player->toGetHit(true);
                         goei_iter->get()->die();
                         if (goei_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            *(this->currentScore) += goei_iter->get()->getWorthPoints();
                             this->aliveCountGoei--;
                         }
                         break;
@@ -828,6 +908,7 @@ void Level::handleEVP() {
                                 CapturedPlayer::CAPTURED_STATES state = CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving;
                                 this->capturedPlayer->setCapturedState(state);
                             }
+                            *(this->currentScore) += boss_iter->get()->getWorthPoints();
                             this->aliveCountBoss--;
                         }
                         break;
@@ -835,6 +916,7 @@ void Level::handleEVP() {
                         this->player->toGetHit(true);
                         boss_iter->get()->die();
                         if (boss_iter->get()->getCurrentState() == Enemy::STATES::dead) {
+                            *(this->currentScore) += boss_iter->get()->getWorthPoints();
                             this->aliveCountBoss--;
                         }
                         break;
@@ -852,7 +934,8 @@ void Level::handleEVP() {
         if (this->divingBoss && this->divingBoss->getCurrentState() == Enemy::STATES::dive) {
             if (this->divingBoss->getCapturing()) {
                 if (this->divingBoss->getCaptureBeam().getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
-                    this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime, this->formation, this->divingBoss, this->player,
+                    std::shared_ptr<BezierPath> tmp = {};
+                    this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime, tmp, this->formation, this->divingBoss, this->player,
                                                                      this->textureManager->operator[]("explosion"), this->textureManager->operator[]("galaga"), this->textureManager->operator[]("galagaRed"),
                                                                      this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->playersScale, this->divingBoss->getIndex());
                     auto playerPosition = this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale;
@@ -902,6 +985,7 @@ void Level::handleEVP() {
 
                 if (this->capturedPlayer->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                     this->capturedPlayer->die();
+                    *(this->currentScore) += this->capturedPlayer->getWorthPoints();
                     this->player->toGetHit();
                 }
             }
@@ -962,12 +1046,16 @@ void Level::updateCombat() {
 }
 
 void Level::update() {
+    this->background->update();
+
     this->updateInput();
     this->updatePlayers();
     this->updateBullets();
 
     if (!this->spawningFinished) {
         this->handleSpawning();
+    } else {
+        this->handleAllDied();
     }
     this->handleFormation();
 
@@ -978,6 +1066,8 @@ void Level::update() {
 }
 
 void Level::render() {
+    this->background->render(*this->window);
+
     this->player->render(*this->window);
 
     for (auto & playerBullet : this->playerBullets) {

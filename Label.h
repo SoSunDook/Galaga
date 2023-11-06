@@ -34,10 +34,11 @@ public:
     void setEndPosition();
     void setPosition(sf::Vector2<float> & pos);
 
-    void update(std::string & txt);
+    void update(const std::string & txt);
 
     void render(sf::RenderTarget & target);
 
+    std::string getText();
     sf::Vector2<float> getPosition();
 };
 

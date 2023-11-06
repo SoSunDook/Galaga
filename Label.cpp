@@ -43,13 +43,17 @@ void Label::setPosition(sf::Vector2<float> & pos) {
     this->text.setPosition(pos);
 }
 
-void Label::update(std::string & txt) {
+void Label::update(const std::string & txt) {
     this->text.setString(txt);
     this->initOrigin();
 }
 
 void Label::render(sf::RenderTarget & target) {
     target.draw(this->text);
+}
+
+std::string Label::getText() {
+    return this->text.getString();
 }
 
 sf::Vector2<float> Label::getPosition() {

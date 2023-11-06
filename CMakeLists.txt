@@ -27,5 +27,6 @@ add_executable(Galaga main.cpp
         Level.cpp
         Menu.cpp
         Label.cpp
-        UI.cpp)
+        UI.cpp
+        Background.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)

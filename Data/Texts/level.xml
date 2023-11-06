@@ -51,5 +51,6 @@
         <Enemy type="zako" index="17"/>
         <Enemy type="zako" index="18"/>
         <Enemy type="zako" index="19"/>
+        <Enemy type="capturedPlayer" index=""/>
     </Spawn>
 </Level>

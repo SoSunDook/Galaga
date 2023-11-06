@@ -9,7 +9,6 @@
 #include <memory>
 #include <valarray>
 #include "BezierPath.h"
-#include "DynamicBezierPath.h"
 #include "Formation.h"
 
 class Enemy {
@@ -127,6 +126,8 @@ public:
     TYPES & getType();
 
     int & getIndex();
+
+    int & getWorthPoints();
 
     sf::Vector2<float> getOrigin();
     sf::FloatRect getGlobalBounds();

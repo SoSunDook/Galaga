@@ -43,6 +43,24 @@ bool Formation::isLocked() {
     return this->locked && this->offsetCounter == 4;
 }
 
+void Formation::reset() {
+    this->position = {360.f, 124.f};
+
+    this->offsetTimer = 0.f;
+    this->offsetCounter = 4;
+    this->offsetDirection = 1;
+
+    this->spreadTimer = 0.f;
+    this->spreadCounter = 0 ;
+    this->spreadDirection = 1;
+
+    this->gridSize = {24.f, 48.f};
+
+    this->locked = false;
+
+    this->changed = false;
+}
+
 void Formation::update() {
     if ((!this->locked) || (this->offsetCounter != 4)) {
         this->offsetTimer += this->deltaTime->asSeconds();

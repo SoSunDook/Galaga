@@ -31,26 +31,7 @@ void Menu::initConstants() {
     this->galagaEndPos = {};
     this->copyrightEndPos = {};
 
-    this->frontVector = {};
-    this->backVector = {};
-
-    this->frontBackgroundTimer = {};
-    this->backBackgroundTimer = {};
-
-    this->frontBackgroundFlashDelay = 0.12f;
-    this->frontBackgroundPlayDelay = 0.36f;
-
-    this->backBackgroundFlashDelay = 0.06f;
-    this->backBackgroundPlayDelay = 0.50f;
-
-    this->frontBackgroundVelocity = 0.25f;
-    this->backBackgroundVelocity = 0.15f;
     this->flyInVelocity = 0.5f;
-
-    this->frontShow = true;
-    this->backShow = true;
-
-    this->backgroundScale = 1.25f;
 
     this->currentState = STATES::flyIn;
 
@@ -126,32 +107,10 @@ void Menu::initSprites() {
 }
 
 void Menu::initBackground() {
-    this->frontBackgroundTexture = this->textureManager->operator[]("bg_front");
-    this->frontBackgroundSprite.setTexture(*this->frontBackgroundTexture);
-    this->frontBackgroundSprite.setScale(this->backgroundScale, this->backgroundScale);
-
-    auto size = this->frontBackgroundTexture->getSize();
-    this->frontPoint = {0, static_cast<float>(size.y - 720)};
-    this->frontVector = {static_cast<float>(size.x), 720};
-    const sf::Rect<int> rectangle(static_cast<sf::Vector2<int>>(this->frontPoint), static_cast<sf::Vector2<int>>(this->frontVector));
-    this->frontBackgroundSprite.setTextureRect(rectangle);
-
-    this->frontBackgroundSprite.setOrigin(this->frontBackgroundSprite.getLocalBounds().getSize() / 2.f);
-    this->frontBackgroundSprite.setPosition(450, 360);
-
-
-    this->backBackgroundTexture = this->textureManager->operator[]("bg_back");
-    this->backBackgroundSprite.setTexture(*this->backBackgroundTexture);
-    this->backBackgroundSprite.setScale(this->backgroundScale, this->backgroundScale);
-
-    size = this->backBackgroundTexture->getSize();
-    this->backPoint = {0, static_cast<float>(size.y - 720)};
-    this->backVector = {static_cast<float>(size.x), 720};
-    const sf::Rect<int> rect(static_cast<sf::Vector2<int>>(this->backPoint), static_cast<sf::Vector2<int>>(this->backVector));
-    this->backBackgroundSprite.setTextureRect(rect);
-
-    this->backBackgroundSprite.setOrigin(this->backBackgroundSprite.getLocalBounds().getSize() / 2.f);
-    this->backBackgroundSprite.setPosition(450, 360);
+    this->background = std::make_unique<Background>(this->textureManager,
+                                                    this->deltaTime,
+                                                    sf::Vector2<float>(450.f, 360.f),
+                                                    1.25f);
 }
 
 void Menu::finishFlyIn() {
@@ -217,51 +176,6 @@ void Menu::handleStates() {
     }
 }
 
-void Menu::updateBackground() {
-    this->frontBackgroundTimer += this->deltaTime->asSeconds();
-    this->backBackgroundTimer += this->deltaTime->asSeconds();
-
-    if (this->frontShow) {
-        if (this->frontBackgroundTimer >= this->frontBackgroundPlayDelay && this->backShow) {
-            this->frontShow = false;
-            this->frontBackgroundTimer = {};
-        }
-    } else {
-        if (this->frontBackgroundTimer >= this->frontBackgroundFlashDelay) {
-            this->frontShow = true;
-            this->frontBackgroundTimer = {};
-        }
-    }
-
-    if (this->backShow) {
-        if (this->backBackgroundTimer >= this->backBackgroundPlayDelay && this->frontShow) {
-            this->backShow = false;
-            this->backBackgroundTimer = {};
-        }
-    } else {
-        if (this->backBackgroundTimer >= this->backBackgroundFlashDelay) {
-            this->backShow = true;
-            this->backBackgroundTimer = {};
-        }
-    }
-
-    if (this->frontPoint.y - this->frontBackgroundVelocity <= 0) {
-        this->frontPoint.y = this->frontBackgroundTexture->getSize().y - 720;
-    } else {
-        this->frontPoint.y -= this->frontBackgroundVelocity;
-    }
-    const sf::Rect<int> rectangle(static_cast<sf::Vector2<int>>(this->frontPoint), static_cast<sf::Vector2<int>>(this->frontVector));
-    this->frontBackgroundSprite.setTextureRect(rectangle);
-
-    if (this->backPoint.y - this->backBackgroundVelocity <= 0) {
-        this->backPoint.y = this->backBackgroundTexture->getSize().y - 720;
-    } else {
-        this->backPoint.y -= this->backBackgroundVelocity;
-    }
-    const sf::Rect<int> rect(static_cast<sf::Vector2<int>>(this->backPoint), static_cast<sf::Vector2<int>>(this->backVector));
-    this->backBackgroundSprite.setTextureRect(rect);
-}
-
 void Menu::updateInput() {
     if (this->currentState == STATES::flyIn) {
         this->selectionTimer += this->deltaTime->asSeconds();
@@ -294,18 +208,13 @@ void Menu::updateInput() {
 }
 
 void Menu::update() {
-    this->updateBackground();
+    this->background->update();
     this->updateInput();
     this->handleStates();
 }
 
 void Menu::render() {
-    if (this->backShow) {
-        this->window->draw(this->backBackgroundSprite);
-    }
-    if (this->frontShow) {
-        this->window->draw(this->frontBackgroundSprite);
-    }
+    this->background->render(*this->window);
 
     this->highScore->render(*this->window);
     this->highScoreInt->render(*this->window);

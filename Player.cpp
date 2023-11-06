@@ -43,7 +43,7 @@ Player::Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> &
     this->deathAnimationDone = {};
     this->currentState = STATES::alive;
     this->currentDoubledSate = STATES::alive;
-    this->healthPoints = 3;
+    this->healthPoints = std::make_shared<int>(3);
     this->doubledPlayer = false;
     this->spriteDoubled = {};
     this->deathAnimationDoubledTimer = {};
@@ -260,9 +260,9 @@ void Player::toDouble() {
 
 void Player::toGetHit(bool side) {
     if (!this->doubledPlayer) {
-        this->healthPoints--;
+        *(this->healthPoints) -= 1;
         this->die();
-        if (this->healthPoints > 0) {
+        if (*(this->healthPoints) > 0) {
             this->currentState = STATES::hit;
         } else {
             this->currentState = STATES::dead;
@@ -281,9 +281,9 @@ void Player::toGetHit(bool side) {
 }
 
 void Player::toGetCaptured() {
-    this->healthPoints--;
+    *(this->healthPoints) -= 1;
     this->die(true);
-    if (this->healthPoints != 0) {
+    if (*(this->healthPoints) != 0) {
         this->currentState = STATES::captured;
     } else {
         this->currentState = STATES::dead;
@@ -298,12 +298,12 @@ void Player::respawn(bool normal) {
     } else {
         sf::Vector2<float> pos = {this->startPos.x + this->sprite.getOrigin().x * this->spriteScale, this->startPos.y};
         this->sprite.setPosition(pos);
-        this->healthPoints++;
+        *(this->healthPoints) += 1;
     }
     this->currentState = STATES::alive;
 }
 
-int & Player::getHealth() {
+std::shared_ptr<int> & Player::getHealth() {
     return this->healthPoints;
 }
 

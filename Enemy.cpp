@@ -339,6 +339,10 @@ int & Enemy::getIndex() {
     return this->index;
 }
 
+int & Enemy::getWorthPoints() {
+    return this->worthPoints;
+}
+
 sf::Vector2<float> Enemy::getOrigin() {
     return this->sprite.getOrigin();
 }

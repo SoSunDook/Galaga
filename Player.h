@@ -36,7 +36,7 @@ private:
 
     float velocity;
 
-    int healthPoints;
+    std::shared_ptr<int> healthPoints;
 
     STATES currentState;
     STATES currentDoubledSate;
@@ -89,7 +89,7 @@ public:
     void render(sf::RenderTarget & target);
 
     bool & getDoubledPlayer();
-    int & getHealth();
+    std::shared_ptr<int> & getHealth();
     STATES & getCurrentState();
     STATES & getCurrentDoubledState();
     sf::FloatRect getGlobalBoundsMain();

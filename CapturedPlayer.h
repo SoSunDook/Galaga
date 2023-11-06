@@ -55,14 +55,17 @@ public:
     bool playerDoubled;
     bool playerRespawnUnDoubled;
 public:
-    explicit CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
+    explicit CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
                   std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedPlayerTexture, std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,
                   float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
     ~CapturedPlayer() = default;
 
     void die() override;
 
-    void setCapturedState(CAPTURED_STATES & newState);
+    void initSpriteSaved();
+
+    void setState(const STATES & newState);
+    void setCapturedState(const CAPTURED_STATES & newState);
 
     CAPTURED_STATES & getCapturedState();
 };

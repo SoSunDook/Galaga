@@ -8,12 +8,18 @@ UI::UI(std::shared_ptr<std::filesystem::path> & dirPath,
        std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
        std::shared_ptr<sf::Time> & timer,
        std::shared_ptr<sf::RenderWindow> & window,
-       std::shared_ptr<sf::Font> & font) {
+       std::shared_ptr<sf::Font> & font,
+       std::shared_ptr<int> & currentHealth,
+       std::shared_ptr<int> & currentScore,
+       std::shared_ptr<int> & currentStage) {
     this->dir_path = dirPath;
     this->textureManager = textures;
     this->deltaTime = timer;
     this->window = window;
     this->font = font;
+    this->currentHealth = currentHealth;
+    this->currentScore = currentScore;
+    this->currentStage = currentStage;
     this->initConstants();
     this->initLabels();
     this->initSprites();
@@ -51,7 +57,7 @@ void UI::initLabels() {
                                         sf::Vector2<float>(757.5f, 169.f),
                                         sf::Vector2<float>(757.5f, 169.f));
     this->playerScoreInt = std::make_unique<Label>(this->font,
-                                        "00",
+                                        std::to_string(*this->currentScore),
                                         sf::Color::White,
                                         this->ordinarySize,
                                         sf::Vector2<float>(810.f, 196.f),
@@ -63,7 +69,7 @@ void UI::initLabels() {
                                         sf::Vector2<float>(785.f, 560.f),
                                         sf::Vector2<float>(785.f, 560.f));
     this->stageInt = std::make_unique<Label>(this->font,
-                                        "1",
+                                        std::to_string(*this->currentStage),
                                         sf::Color::White,
                                         this->ordinarySize,
                                         sf::Vector2<float>(810.f, 587.f),
@@ -71,9 +77,9 @@ void UI::initLabels() {
 }
 
 void UI::initSprites() {
-    this->galagaHealth.resize(3);
+    this->galagaHealth.resize(*(this->currentHealth));
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < *(this->currentHealth); ++i) {
         this->galagaHealth[i].setTexture(*this->textureManager->operator[]("galaga"));
         this->galagaHealth[i].setScale(this->galagaScale, this->galagaScale);
         this->galagaHealth[i].setOrigin(this->galagaHealth[i].getLocalBounds().getSize() / 2.f);
@@ -86,7 +92,12 @@ void UI::initSprites() {
 }
 
 void UI::update() {
-
+    if (std::to_string(*(this->currentStage)) != this->stageInt->getText()) {
+        this->stageInt->update(std::to_string(*(this->currentStage)));
+    }
+    if (std::to_string(*(this->currentScore)) != this->playerScoreInt->getText()) {
+        this->playerScoreInt->update(std::to_string(*(this->currentScore)));
+    }
 }
 
 void UI::render() {
@@ -100,7 +111,7 @@ void UI::render() {
     this->stage->render(*this->window);
     this->stageInt->render(*this->window);
 
-    for (const auto & galaga : galagaHealth) {
-        this->window->draw(galaga);
+    for (int i = 0; i < *(this->currentHealth); ++i) {
+        this->window->draw(this->galagaHealth[i]);
     }
 }

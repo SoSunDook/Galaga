@@ -40,6 +40,8 @@ public:
     void lock();
     bool isLocked();
 
+    void reset();
+
     void update();
 
     int getTick();

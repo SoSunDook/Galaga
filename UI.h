@@ -21,6 +21,10 @@ private:
     std::shared_ptr<sf::Font> font;
     std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> textureManager;
 
+    std::shared_ptr<int> currentHealth;
+    std::shared_ptr<int> currentScore;
+    std::shared_ptr<int> currentStage;
+
     std::unique_ptr<Label> high;
     std::unique_ptr<Label> score;
     std::unique_ptr<Label> highScoreInt;
@@ -45,7 +49,10 @@ public:
        std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
        std::shared_ptr<sf::Time> & timer,
        std::shared_ptr<sf::RenderWindow> & window,
-       std::shared_ptr<sf::Font> & font);
+       std::shared_ptr<sf::Font> & font,
+       std::shared_ptr<int> & currentHealth,
+       std::shared_ptr<int> & currentScore,
+       std::shared_ptr<int> & currentStage);
     ~UI() = default;
 
     void update();

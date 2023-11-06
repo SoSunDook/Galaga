@@ -5,7 +5,7 @@
 #include <iostream>
 #include "CapturedPlayer.h"
 
-CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
+CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
                                std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedPlayerTexture, std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,
                                float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
     this->healthPoints = 1;
@@ -37,12 +37,26 @@ CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_pt
     this->textureRed = managedCapturedPlayerTexture;
     this->initSprite();
     this->initOrigin();
+    if (spawningPath) {
+        this->initSpawnPath(spawningPath);
+        this->initSpawnPosition();
+    }
 }
 
 void CapturedPlayer::initSprite() {
     this->sprite.setTexture(*this->texture);
     this->sprite.setScale(this->spriteScale, this->spriteScale);
     auto size = this->texture->getSize();
+    sf::Vector2<int> point(0, 0);
+    sf::Vector2<int> vector(static_cast<int>(size.x), static_cast<int>(size.y));
+    const sf::Rect<int> rectangle(point, vector);
+    this->sprite.setTextureRect(rectangle);
+}
+
+void CapturedPlayer::initSpriteSaved() {
+    this->sprite.setTexture(*this->textureRed);
+    this->sprite.setScale(this->spriteScale, this->spriteScale);
+    auto size = this->textureRed->getSize();
     sf::Vector2<int> point(0, 0);
     sf::Vector2<int> vector(static_cast<int>(size.x), static_cast<int>(size.y));
     const sf::Rect<int> rectangle(point, vector);
@@ -159,7 +173,7 @@ void CapturedPlayer::handleBossShotWhileDivingState() {
                 this->sprite.setTextureRect(rectangle);
             }
         }
-        if ((!this->visitedLastRespawn) && (this->relatedPlayer->getHealth() == 0 && this->relatedPlayer->getCurrentState() == Player::STATES::dead)) {
+        if ((!this->visitedLastRespawn) && (*(this->relatedPlayer->getHealth()) == 0 && this->relatedPlayer->getCurrentState() == Player::STATES::dead)) {
             sf::Vector2f endPoint = {this->relatedPlayer->getStartPos().x + this->sprite.getOrigin().x * this->spriteScale, this->relatedPlayer->getStartPos().y};
             sf::Vector2f direction = endPoint - this->sprite.getPosition();
             float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
@@ -203,7 +217,11 @@ void CapturedPlayer::handleBossShotInFormationState() {
     }
 }
 
-void CapturedPlayer::setCapturedState(CapturedPlayer::CAPTURED_STATES & newState) {
+void CapturedPlayer::setState(const Enemy::STATES & newState) {
+    this->currentState = newState;
+}
+
+void CapturedPlayer::setCapturedState(const CapturedPlayer::CAPTURED_STATES & newState) {
     this->currentCapturedState = newState;
 }
 

@@ -14,6 +14,7 @@
 #include "Boss.h"
 #include "CapturedPlayer.h"
 #include "UI.h"
+#include "Background.h"
 #include "pugixml.hpp"
 #include <memory>
 #include <string>
@@ -33,6 +34,8 @@ private:
 
     std::unique_ptr<UI> ui;
 
+    std::unique_ptr<Background> background;
+
     std::shared_ptr<Player> player;
     std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
 
@@ -42,6 +45,9 @@ private:
     std::vector<std::shared_ptr<EnemyBullet>> enemyBullets;
 
     std::shared_ptr<Formation> formation;
+
+    std::shared_ptr<int> currentScore;
+    std::shared_ptr<int> currentStage;
 
     float playerVelocity;
     float playerBulletsVelocity;
@@ -99,11 +105,13 @@ private:
     int savedCapturedPlayerIndex;
 
     void initConstants();
+    void initScoreStage();
     void initFormationVectors();
     void initFormation();
     void initSpawningPatterns();
     void initPlayer();
     void initUI();
+    void initBackground();
     std::shared_ptr<PlayerBullet> initNewPlBullet();
     std::shared_ptr<EnemyBullet> initNewEnBullet();
 
@@ -111,6 +119,9 @@ private:
     void handleSpawning();
     void handleFormation();
     void handleDiving();
+    void handleAllDied();
+
+    void reset();
 
     void handlePVE();
     void handleEVP();
