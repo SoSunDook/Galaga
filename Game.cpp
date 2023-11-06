@@ -468,7 +468,8 @@ void Game::initLevel() {
                                           this->textureManager,
                                           this->pathManager,
                                           this->deltaTime,
-                                          this->window);
+                                          this->window,
+                                          this->font);
 }
 
 Game::Game() {

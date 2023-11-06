@@ -13,6 +13,7 @@
 #include "Goei.h"
 #include "Boss.h"
 #include "CapturedPlayer.h"
+#include "UI.h"
 #include "pugixml.hpp"
 #include <memory>
 #include <string>
@@ -26,8 +27,11 @@ private:
     std::shared_ptr<std::filesystem::path> dir_path;
     std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> textureManager;
     std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> pathManager;
+    std::shared_ptr<sf::Font> font;
 
     pugi::xml_document spawningPatterns;
+
+    std::unique_ptr<UI> ui;
 
     std::shared_ptr<Player> player;
     std::vector<std::shared_ptr<PlayerBullet>> playerBullets;
@@ -99,6 +103,7 @@ private:
     void initFormation();
     void initSpawningPatterns();
     void initPlayer();
+    void initUI();
     std::shared_ptr<PlayerBullet> initNewPlBullet();
     std::shared_ptr<EnemyBullet> initNewEnBullet();
 
@@ -120,7 +125,8 @@ public:
           std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
           std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & pathManager,
           std::shared_ptr<sf::Time> & timer,
-          std::shared_ptr<sf::RenderWindow> & window);
+          std::shared_ptr<sf::RenderWindow> & window,
+          std::shared_ptr<sf::Font> & font);
     ~Level() = default;
 
     void update();

@@ -8,17 +8,20 @@ Level::Level(std::shared_ptr<std::filesystem::path> & dirPath,
              std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
              std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & pathManager,
              std::shared_ptr<sf::Time> & timer,
-             std::shared_ptr<sf::RenderWindow> & window) {
+             std::shared_ptr<sf::RenderWindow> & window,
+             std::shared_ptr<sf::Font> & font) {
     this->dir_path = dirPath;
     this->textureManager = textures;
     this->pathManager = pathManager;
     this->deltaTime = timer;
     this->window = window;
+    this->font = font;
     this->initConstants();
     this->initSpawningPatterns();
     this->initFormationVectors();
     this->initFormation();
     this->initPlayer();
+    this->initUI();
 }
 
 void Level::initConstants() {
@@ -97,6 +100,14 @@ void Level::initSpawningPatterns() {
 void Level::initPlayer() {
     this->player = std::make_shared<Player>(this->deltaTime, this->textureManager->operator[]("playerExplosion"), this->textureManager->operator[]("galaga"),
                                             this->playerVelocity, this->playerShootCooldown, this->playersScale);
+}
+
+void Level::initUI() {
+    this->ui = std::make_unique<UI>(this->dir_path,
+                                    this->textureManager,
+                                    this->deltaTime,
+                                    this->window,
+                                    this->font);
 }
 
 std::shared_ptr<PlayerBullet> Level::initNewPlBullet() {
@@ -962,6 +973,8 @@ void Level::update() {
 
     this->updateEnemies();
     this->updateCombat();
+
+    this->ui->update();
 }
 
 void Level::render() {
@@ -996,4 +1009,6 @@ void Level::render() {
     if (this->capturedPlayer) {
         this->capturedPlayer->render(*this->window);
     }
+
+    this->ui->render();
 }

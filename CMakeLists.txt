@@ -26,5 +26,6 @@ add_executable(Galaga main.cpp
         EnemyBullet.cpp
         Level.cpp
         Menu.cpp
-        Label.cpp)
+        Label.cpp
+        UI.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)
