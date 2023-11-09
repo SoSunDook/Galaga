@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <iostream>
 #include "Label.h"
+#include "Highscore.h"
 
 class UI {
 private:
@@ -20,6 +21,7 @@ private:
     std::shared_ptr<std::filesystem::path> dir_path;
     std::shared_ptr<sf::Font> font;
     std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> textureManager;
+    std::shared_ptr<Highscore> highScoreObj;
 
     std::shared_ptr<int> currentHealth;
     std::shared_ptr<int> currentScore;
@@ -45,15 +47,18 @@ private:
     void initLabels();
     void initSprites();
 public:
-    UI(std::shared_ptr<std::filesystem::path> & dirPath,
-       std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
-       std::shared_ptr<sf::Time> & timer,
-       std::shared_ptr<sf::RenderWindow> & window,
-       std::shared_ptr<sf::Font> & font,
-       std::shared_ptr<int> & currentHealth,
-       std::shared_ptr<int> & currentScore,
-       std::shared_ptr<int> & currentStage);
+    explicit UI(std::shared_ptr<std::filesystem::path> & dirPath,
+                std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
+                std::shared_ptr<sf::Time> & timer,
+                std::shared_ptr<sf::RenderWindow> & window,
+                std::shared_ptr<sf::Font> & font,
+                std::shared_ptr<Highscore> & highScoreObj,
+                std::shared_ptr<int> & currentHealth,
+                std::shared_ptr<int> & currentScore,
+                std::shared_ptr<int> & currentStage);
     ~UI() = default;
+
+    void reset();
 
     void update();
 

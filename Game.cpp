@@ -455,12 +455,17 @@ void Game::initPaths() {
     pathManager->operator[]("divebosscapturerightMirrored") = new_path_mirrored;
 }
 
+void Game::initHighScore() {
+    this->highScoreObj = std::make_shared<Highscore>(this->dir_path);
+}
+
 void Game::initMenu() {
     this->menu = std::make_unique<Menu>(this->dir_path,
                                         this->textureManager,
                                         this->deltaTime,
                                         this->window,
-                                        this->font);
+                                        this->font,
+                                        this->highScoreObj);
 }
 
 void Game::initLevel() {
@@ -469,7 +474,8 @@ void Game::initLevel() {
                                           this->pathManager,
                                           this->deltaTime,
                                           this->window,
-                                          this->font);
+                                          this->font,
+                                          this->highScoreObj);
 }
 
 Game::Game() {
@@ -480,6 +486,7 @@ Game::Game() {
     this->initFont();
     this->initTextures();
     this->initPaths();
+    this->initHighScore();
     this->initMenu();
     this->initLevel();
 }
@@ -488,6 +495,7 @@ void Game::handleMenuState() {
     this->menu->update();
     if (this->menu->getCurrentState() == Menu::STATES::onePlayer) {
         this->currentState = STATES::LEVEL;
+        this->level->fullReset();
     } else if (this->menu->getCurrentState() == Menu::STATES::twoPlayers) {
 
     }
@@ -495,6 +503,10 @@ void Game::handleMenuState() {
 
 void Game::handleLevelState() {
     this->level->update();
+    if (this->level->getCurrentState() == Level::STATES::gameOver) {
+        this->currentState = STATES::MENU;
+        this->menu->reset();
+    }
 }
 
 void Game::handleStates() {

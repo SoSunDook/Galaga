@@ -9,12 +9,14 @@ Menu::Menu(std::shared_ptr<std::filesystem::path> & dirPath,
            std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
            std::shared_ptr<sf::Time> & timer,
            std::shared_ptr<sf::RenderWindow> & window,
-           std::shared_ptr<sf::Font> & font) {
+           std::shared_ptr<sf::Font> & font,
+           std::shared_ptr<Highscore> & highScoreObj) {
     this->dir_path = dirPath;
     this->textureManager = textures;
     this->deltaTime = timer;
     this->window = window;
     this->font = font;
+    this->highScoreObj = highScoreObj;
     this->initConstants();
     this->initLabels();
     this->initSprites();
@@ -49,7 +51,7 @@ void Menu::initLabels() {
                                               sf::Vector2<float>(450.f, 720 + 70.f),
                                               sf::Vector2<float>(450.f, 70.f));
     this->highScoreInt = std::make_unique<Label>(this->font,
-                                              "30000",
+                                              std::to_string(this->highScoreObj->read()),
                                               sf::Color::White,
                                               this->ordinarySize,
                                               sf::Vector2<float>(450.f, 720 + 96.f),
@@ -207,7 +209,25 @@ void Menu::updateInput() {
     }
 }
 
+void Menu::reset() {
+    this->galagaEndPos = {};
+    this->copyrightEndPos = {};
+
+    this->currentState = STATES::flyIn;
+
+    this->selectionTimer = {};
+
+    this->currentSelection = {};
+
+    this->initLabels();
+    this->initSprites();
+    this->initBackground();
+}
+
 void Menu::update() {
+    if (std::to_string(this->highScoreObj->read()) != this->highScoreInt->getText()) {
+        this->highScoreInt->update(std::to_string(this->highScoreObj->read()));
+    }
     this->background->update();
     this->updateInput();
     this->handleStates();

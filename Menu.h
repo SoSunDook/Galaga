@@ -12,6 +12,7 @@
 #include <iostream>
 #include "Label.h"
 #include "Background.h"
+#include "Highscore.h"
 
 class Menu {
 public:
@@ -27,6 +28,7 @@ private:
     std::shared_ptr<std::filesystem::path> dir_path;
     std::shared_ptr<sf::Font> font;
     std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> textureManager;
+    std::shared_ptr<Highscore> highScoreObj;
 
     std::unique_ptr<Background> background;
 
@@ -73,12 +75,15 @@ private:
 
     void updateInput();
 public:
-    Menu(std::shared_ptr<std::filesystem::path> & dirPath,
-         std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
-         std::shared_ptr<sf::Time> & timer,
-         std::shared_ptr<sf::RenderWindow> & window,
-         std::shared_ptr<sf::Font> & font);
+    explicit Menu(std::shared_ptr<std::filesystem::path> & dirPath,
+                  std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
+                  std::shared_ptr<sf::Time> & timer,
+                  std::shared_ptr<sf::RenderWindow> & window,
+                  std::shared_ptr<sf::Font> & font,
+                  std::shared_ptr<Highscore> & highScoreObj);
     ~Menu() = default;
+
+    void reset();
 
     void update();
 

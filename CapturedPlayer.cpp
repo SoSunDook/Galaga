@@ -209,7 +209,7 @@ void CapturedPlayer::handleBossShotInFormationState() {
             this->sprite.move((direction / distance) * movement);
         }
 
-        if (this->currentPoint >= this->currentPath->getPath().size() && !this->visitedSaveNextLevel) {
+        if ((this->currentPoint >= this->currentPath->getPath().size()) && (!this->visitedSaveNextLevel)) {
             this->currentState = Enemy::STATES::dead;
             this->savedNextLevel = true;
             this->visitedSaveNextLevel = true;

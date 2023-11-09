@@ -202,6 +202,24 @@ bool Player::canAttack() {
     return false;
 }
 
+void Player::reset() {
+    this->playerShootTimer = {};
+    this->deathAnimationTimer = {};
+    this->currentDeathAnimationFrame = {};
+    this->deathAnimationDone = {};
+    this->currentState = STATES::alive;
+    this->currentDoubledSate = STATES::alive;
+    *(this->healthPoints) = 3;
+    this->doubledPlayer = false;
+    this->spriteDoubled = {};
+    this->deathAnimationDoubledTimer = {};
+    this->currentDeathAnimationDoubledFrame = {};
+    this->deathAnimationDoubledDone = {};
+    this->initSprite();
+    this->initOrigin();
+    this->setStartPos();
+}
+
 void Player::die(bool instant) {
     if (!instant) {
         this->deathAnimationDone = false;

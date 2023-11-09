@@ -5,23 +5,26 @@
 #include "Level.h"
 
 Level::Level(std::shared_ptr<std::filesystem::path> & dirPath,
-             std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
-             std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & pathManager,
-             std::shared_ptr<sf::Time> & timer,
-             std::shared_ptr<sf::RenderWindow> & window,
-             std::shared_ptr<sf::Font> & font) {
+            std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
+            std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & pathManager,
+            std::shared_ptr<sf::Time> & timer,
+            std::shared_ptr<sf::RenderWindow> & window,
+            std::shared_ptr<sf::Font> & font,
+            std::shared_ptr<Highscore> & highScoreObj) {
     this->dir_path = dirPath;
     this->textureManager = textures;
     this->pathManager = pathManager;
     this->deltaTime = timer;
     this->window = window;
     this->font = font;
+    this->highScoreObj = highScoreObj;
     this->initConstants();
     this->initScoreStage();
     this->initSpawningPatterns();
     this->initFormationVectors();
     this->initFormation();
     this->initPlayer();
+    this->initMidLabel();
     this->initUI();
     this->initBackground();
 }
@@ -82,6 +85,24 @@ void Level::initConstants() {
     this->capturedPlayer = {};
     this->savedCapturedPlayer = {};
     this->savedCapturedPlayerIndex = {};
+
+    this->showMidLabel = {};
+
+    this->levelStartStartDelay = 1.5f;
+    this->levelStartStartTimer = {};
+
+    this->levelStartStageDelay = 1.5f;
+    this->levelStartStageTimer = {};
+
+    this->levelStartReadyDelay = 1.5f;
+    this->levelStartReadyTimer = {};
+
+    this->gameOverDelay = 2.5f;
+    this->gameOverTimer = {};
+
+    this->currentState = STATES::playing;
+
+    this->ordinarySize = 25;
 }
 
 void Level::initScoreStage() {
@@ -109,12 +130,22 @@ void Level::initPlayer() {
                                             this->playerVelocity, this->playerShootCooldown, this->playersScale);
 }
 
+void Level::initMidLabel() {
+    this->midLabel = std::make_unique<Label>(this->font,
+                                            "START",
+                                            sf::Color::Red,
+                                            this->ordinarySize,
+                                            sf::Vector2<float>(360.f, 360.f),
+                                            sf::Vector2<float>(360.f, 360.f));
+}
+
 void Level::initUI() {
     this->ui = std::make_unique<UI>(this->dir_path,
                                     this->textureManager,
                                     this->deltaTime,
                                     this->window,
                                     this->font,
+                                    this->highScoreObj,
                                     this->player->getHealth(),
                                     this->currentScore,
                                     this->currentStage);
@@ -139,6 +170,9 @@ std::shared_ptr<EnemyBullet> Level::initNewEnBullet() {
 
 void Level::updateInput() {
     if (this->player->getCurrentState() == Player::STATES::alive) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+            this->player->toGetHit();
+        }
         bool canMove;
         bool canShoot = true;
         if (this->capturedPlayer) {
@@ -371,10 +405,16 @@ void Level::handleFormation() {
             if (this->player->getCurrentState() != Player::STATES::alive) {
                 if (!(this->firstDivingZako || this->secondDivingZako || this->divingGoei || this->divingBoss)) {
                     if (this->player->getCurrentState() != Player::STATES::dead) {
+                        if ("READY" != this->midLabel->getText()) {
+                            this->midLabel->update("READY");
+                        }
                         this->respawningTimer += this->deltaTime->asSeconds();
                         if (this->respawningTimer >= this->respawningDelay) {
                             this->player->respawn();
                             this->respawningTimer = 0.f;
+                            this->showMidLabel = false;
+                        } else {
+                            this->showMidLabel = true;
                         }
                     }
                 }
@@ -595,13 +635,8 @@ void Level::handleAllDied() {
         if (!this->capturedPlayer) {
             this->reset();
             *(this->currentStage) += 1;
-            if (this->capturedPlayer) {
-                if (!this->player->getDoubledPlayer()) {
-                    this->capturedPlayer = {};
-                }
-            }
         } else {
-            if (this->capturedPlayer->getCurrentState() == Enemy::STATES::dead) {
+            if (this->capturedPlayer->getCurrentState() == Enemy::STATES::dead && !this->capturedPlayer->playerRespawnUnDoubled) {
                 this->reset();
                 *(this->currentStage) += 1;
                 if (this->capturedPlayer) {
@@ -612,6 +647,116 @@ void Level::handleAllDied() {
             }
         }
     }
+}
+
+void Level::handleGameOver() {
+    if (*(this->player->getHealth()) == 0) {
+        if (this->capturedPlayer) {
+            if (this->capturedPlayer->getCurrentState() == Enemy::STATES::dead) {
+                if (this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotInFormation ||
+                    this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving) {
+                    if (this->gameOverTimer >= this->gameOverDelay) {
+                        this->showMidLabel = {};
+                        this->currentState = STATES::gameOver;
+                    } else {
+                        if ("GAME OVER " + std::to_string(*(this->currentScore)) != this->midLabel->getText()) {
+                            this->midLabel->update("GAME OVER " + std::to_string(*(this->currentScore)));
+                        }
+                        this->gameOverTimer += this->deltaTime->asSeconds();
+                        this->showMidLabel = true;
+                    }
+                }
+            } else {
+                if (this->capturedPlayer->getCapturedState() != CapturedPlayer::CAPTURED_STATES::bossShotInFormation &&
+                    this->capturedPlayer->getCapturedState() != CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving) {
+                    if (this->gameOverTimer >= this->gameOverDelay) {
+                        this->showMidLabel = {};
+                        this->currentState = STATES::gameOver;
+                    } else {
+                        if ("GAME OVER " + std::to_string(*(this->currentScore)) != this->midLabel->getText()) {
+                            this->midLabel->update("GAME OVER " + std::to_string(*(this->currentScore)));
+                        }
+                        this->gameOverTimer += this->deltaTime->asSeconds();
+                        this->showMidLabel = true;
+                    }
+                }
+            }
+        } else {
+            if (this->gameOverTimer >= this->gameOverDelay) {
+                this->showMidLabel = {};
+                this->currentState = STATES::gameOver;
+            } else {
+                if ("GAME OVER " + std::to_string(*(this->currentScore)) != this->midLabel->getText()) {
+                    this->midLabel->update("GAME OVER " + std::to_string(*(this->currentScore)));
+                }
+                this->gameOverTimer += this->deltaTime->asSeconds();
+                this->showMidLabel = true;
+            }
+        }
+    }
+}
+
+void Level::fullReset() {
+    this->reset();
+
+    this->player->reset();
+
+    this->ui->reset();
+
+    for (auto & zako : this->formationZakos) {
+        if (zako) {
+            zako = {};
+        }
+    }
+
+    for (auto & goei : this->formationGoeis) {
+        if (goei) {
+            goei = {};
+        }
+    }
+
+    for (auto & boss : this->formationBosses) {
+        if (boss) {
+            boss = {};
+        }
+    }
+
+    this->playerBullets = {};
+
+    this->enemyBullets = {};
+
+    *(this->currentScore) = 0;
+    *(this->currentStage) = 1;
+
+    this->spawningTimer = 0.f;
+
+    this->respawningTimer = 0.f;
+
+    this->divingGoei = {};
+    this->skipFirstGoei = false;
+    this->goeiDiveTimer = 0.f;
+
+    this->firstDivingZako = {};
+    this->secondDivingZako = {};
+    this->zakoDiveTimer = 0.f;
+    this->zakoDiveTimer = {};
+
+    this->divingBoss = {};
+    this->captureDive = {};
+    this->skipFirstBoss = {};
+    this->bossDiveTimer = 0.f;
+
+    this->capturedPlayer = {};
+    this->savedCapturedPlayer = {};
+    this->savedCapturedPlayerIndex = {};
+
+    this->showMidLabel = {};
+
+    this->levelStartStartTimer = {};
+
+    this->gameOverTimer = {};
+
+    this->currentState = STATES::playing;
 }
 
 void Level::reset() {
@@ -628,8 +773,11 @@ void Level::reset() {
     this->currentFlyInPriority = {};
     this->currentFlyInIndex = {};
 
+    this->levelStartStageTimer = {};
+
+    this->levelStartReadyTimer = {};
+
     this->spawningFinished = {};
-    this->spawningTimer = {};
 }
 
 void Level::handlePVE() {
@@ -718,13 +866,17 @@ void Level::handlePVE() {
             }
         }
 
-        if (this->capturedPlayer) {
-            if (this->capturedPlayer->getCurrentState() != Enemy::STATES::dead) {
-                if (this->capturedPlayer->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
-                    pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
-                    this->capturedPlayer->hit();
-                    *(this->currentScore) += this->capturedPlayer->getWorthPoints();
-                    bullet_deleted = true;
+        if (!bullet_deleted) {
+            if (this->capturedPlayer) {
+                if (this->capturedPlayer->getCurrentState() != Enemy::STATES::dead) {
+                    if (this->capturedPlayer->getGlobalBounds().intersects(pl_bullet_iter->get()->getGlobalBounds())) {
+                        pl_bullet_iter = this->playerBullets.erase(pl_bullet_iter);
+                        this->capturedPlayer->hit();
+                        this->savedCapturedPlayer = {};
+                        this->savedCapturedPlayerIndex = {};
+                        *(this->currentScore) += this->capturedPlayer->getWorthPoints();
+                        bullet_deleted = true;
+                    }
                 }
             }
         }
@@ -986,6 +1138,8 @@ void Level::handleEVP() {
                 if (this->capturedPlayer->getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                     this->capturedPlayer->die();
                     *(this->currentScore) += this->capturedPlayer->getWorthPoints();
+                    this->savedCapturedPlayer = {};
+                    this->savedCapturedPlayerIndex = {};
                     this->player->toGetHit();
                 }
             }
@@ -1037,12 +1191,22 @@ void Level::updateEnemies() {
             this->savedCapturedPlayerIndex = this->capturedPlayer->getIndex();
             this->capturedPlayer->savedNextLevel = false;
         }
+        if (this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::onlyCaptured ||
+        this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::onlyCapturedWithBoss) {
+            if ("FIGHTER CAPTURED" != this->midLabel->getText()) {
+                this->midLabel->update("FIGHTER CAPTURED");
+            }
+        }
     }
 }
 
 void Level::updateCombat() {
     this->handlePVE();
     this->handleEVP();
+}
+
+Level::STATES & Level::getCurrentState() {
+    return this->currentState;
 }
 
 void Level::update() {
@@ -1053,11 +1217,37 @@ void Level::update() {
     this->updateBullets();
 
     if (!this->spawningFinished) {
-        this->handleSpawning();
+        if (this->levelStartStartTimer >= this->levelStartStartDelay) {
+            if (this->levelStartStageTimer >= this->levelStartStageDelay) {
+                if (this->levelStartReadyTimer >= this->levelStartReadyDelay) {
+                    this->showMidLabel = {};
+                    this->handleSpawning();
+                } else {
+                    if ("READY" != this->midLabel->getText()) {
+                        this->midLabel->update("READY");
+                    }
+                    this->levelStartReadyTimer += this->deltaTime->asSeconds();
+                    this->showMidLabel = true;
+                }
+            } else {
+                if ("STAGE " + std::to_string(*(this->currentStage)) != this->midLabel->getText()) {
+                    this->midLabel->update("STAGE " + std::to_string(*(this->currentStage)));
+                }
+                this->levelStartStageTimer += this->deltaTime->asSeconds();
+                this->showMidLabel = true;
+            }
+        } else {
+            if ("START" != this->midLabel->getText()) {
+                this->midLabel->update("START");
+            }
+            this->levelStartStartTimer += this->deltaTime->asSeconds();
+            this->showMidLabel = true;
+        }
     } else {
         this->handleAllDied();
     }
     this->handleFormation();
+    this->handleGameOver();
 
     this->updateEnemies();
     this->updateCombat();
@@ -1101,4 +1291,10 @@ void Level::render() {
     }
 
     this->ui->render();
+
+    if (this->showMidLabel || (this->capturedPlayer &&
+    (this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::onlyCaptured ||
+    this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::onlyCapturedWithBoss))) {
+        this->midLabel->render(*this->window);
+    }
 }

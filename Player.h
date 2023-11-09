@@ -84,6 +84,8 @@ public:
 
     bool canAttack();
 
+    void reset();
+
     void update();
 
     void render(sf::RenderTarget & target);

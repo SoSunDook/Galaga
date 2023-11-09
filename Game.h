@@ -18,6 +18,7 @@ private:
     std::shared_ptr<sf::Font> font;
     std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> textureManager;
     std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> pathManager;
+    std::shared_ptr<Highscore> highScoreObj;
 
     sf::Clock clock;
     std::shared_ptr<sf::Time> deltaTime;
@@ -35,6 +36,7 @@ private:
     void initFont();
     void initTextures();
     void initPaths();
+    void initHighScore();
     void initMenu();
     void initLevel();
 

@@ -9,6 +9,7 @@ UI::UI(std::shared_ptr<std::filesystem::path> & dirPath,
        std::shared_ptr<sf::Time> & timer,
        std::shared_ptr<sf::RenderWindow> & window,
        std::shared_ptr<sf::Font> & font,
+       std::shared_ptr<Highscore> & highScoreObj,
        std::shared_ptr<int> & currentHealth,
        std::shared_ptr<int> & currentScore,
        std::shared_ptr<int> & currentStage) {
@@ -20,6 +21,7 @@ UI::UI(std::shared_ptr<std::filesystem::path> & dirPath,
     this->currentHealth = currentHealth;
     this->currentScore = currentScore;
     this->currentStage = currentStage;
+    this->highScoreObj = highScoreObj;
     this->initConstants();
     this->initLabels();
     this->initSprites();
@@ -45,7 +47,7 @@ void UI::initLabels() {
                                         sf::Vector2<float>(820.f, 67.f),
                                         sf::Vector2<float>(820.f, 67.f));
     this->highScoreInt = std::make_unique<Label>(this->font,
-                                        "30000",
+                                        std::to_string(this->highScoreObj->read()),
                                         sf::Color::White,
                                         this->ordinarySize,
                                         sf::Vector2<float>(810.f, 94.f),
@@ -91,12 +93,21 @@ void UI::initSprites() {
     this->background.setPosition(810, 360);
 }
 
+void UI::reset() {
+    this->initLabels();
+    this->initSprites();
+}
+
 void UI::update() {
     if (std::to_string(*(this->currentStage)) != this->stageInt->getText()) {
         this->stageInt->update(std::to_string(*(this->currentStage)));
     }
     if (std::to_string(*(this->currentScore)) != this->playerScoreInt->getText()) {
         this->playerScoreInt->update(std::to_string(*(this->currentScore)));
+    }
+    if (*(this->currentScore) > this->highScoreObj->read()) {
+        this->highScoreObj->write(*(this->currentScore));
+        this->highScoreInt->update(std::to_string(this->highScoreObj->read()));
     }
 }
 

@@ -22,6 +22,11 @@
 #include <iostream>
 
 class Level {
+public:
+    enum STATES {
+        playing,
+        gameOver
+    };
 private:
     std::shared_ptr<sf::RenderWindow> window;
     std::shared_ptr<sf::Time> deltaTime;
@@ -29,10 +34,13 @@ private:
     std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> textureManager;
     std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> pathManager;
     std::shared_ptr<sf::Font> font;
+    std::shared_ptr<Highscore> highScoreObj;
 
     pugi::xml_document spawningPatterns;
 
     std::unique_ptr<UI> ui;
+
+    std::unique_ptr<Label> midLabel;
 
     std::unique_ptr<Background> background;
 
@@ -104,12 +112,31 @@ private:
     bool savedCapturedPlayer;
     int savedCapturedPlayerIndex;
 
+    STATES currentState;
+
+    unsigned int ordinarySize;
+
+    bool showMidLabel;
+
+    float levelStartStartDelay;
+    float levelStartStartTimer;
+
+    float levelStartStageDelay;
+    float levelStartStageTimer;
+
+    float levelStartReadyDelay;
+    float levelStartReadyTimer;
+
+    float gameOverDelay;
+    float gameOverTimer;
+
     void initConstants();
     void initScoreStage();
     void initFormationVectors();
     void initFormation();
     void initSpawningPatterns();
     void initPlayer();
+    void initMidLabel();
     void initUI();
     void initBackground();
     std::shared_ptr<PlayerBullet> initNewPlBullet();
@@ -120,6 +147,7 @@ private:
     void handleFormation();
     void handleDiving();
     void handleAllDied();
+    void handleGameOver();
 
     void reset();
 
@@ -132,13 +160,18 @@ private:
     void updateEnemies();
     void updateCombat();
 public:
-    Level(std::shared_ptr<std::filesystem::path> & dirPath,
-          std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
-          std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & pathManager,
-          std::shared_ptr<sf::Time> & timer,
-          std::shared_ptr<sf::RenderWindow> & window,
-          std::shared_ptr<sf::Font> & font);
+    explicit Level(std::shared_ptr<std::filesystem::path> & dirPath,
+                   std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
+                   std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & pathManager,
+                   std::shared_ptr<sf::Time> & timer,
+                   std::shared_ptr<sf::RenderWindow> & window,
+                   std::shared_ptr<sf::Font> & font,
+                   std::shared_ptr<Highscore> & highScoreObj);
     ~Level() = default;
+
+    STATES & getCurrentState();
+
+    void fullReset();
 
     void update();
 
