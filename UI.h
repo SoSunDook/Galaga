@@ -26,6 +26,7 @@ private:
     std::shared_ptr<int> currentHealth;
     std::shared_ptr<int> currentScore;
     std::shared_ptr<int> currentStage;
+    std::shared_ptr<bool> currentPlayer;
 
     std::unique_ptr<Label> high;
     std::unique_ptr<Label> score;
@@ -55,7 +56,8 @@ public:
                 std::shared_ptr<Highscore> & highScoreObj,
                 std::shared_ptr<int> & currentHealth,
                 std::shared_ptr<int> & currentScore,
-                std::shared_ptr<int> & currentStage);
+                std::shared_ptr<int> & currentStage,
+                std::shared_ptr<bool> & currentPlayer);
     ~UI() = default;
 
     void reset();

@@ -496,14 +496,20 @@ void Game::handleMenuState() {
     if (this->menu->getCurrentState() == Menu::STATES::onePlayer) {
         this->currentState = STATES::LEVEL;
         this->level->fullReset();
+        this->level->setPlayers(false);
     } else if (this->menu->getCurrentState() == Menu::STATES::twoPlayers) {
-
+        this->currentState = STATES::LEVEL;
+        this->level->fullReset();
+        this->level->setPlayers(true);
     }
 }
 
 void Game::handleLevelState() {
     this->level->update();
-    if (this->level->getCurrentState() == Level::STATES::gameOver) {
+    if (this->level->getCurrentState() == Level::STATES::gameOver && this->level->getPlayers()) {
+        this->currentState = STATES::LEVEL;
+        this->level->fullReset(true);
+    } else if (this->level->getCurrentState() == Level::STATES::gameOver) {
         this->currentState = STATES::MENU;
         this->menu->reset();
     }

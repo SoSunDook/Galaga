@@ -20,6 +20,7 @@ Level::Level(std::shared_ptr<std::filesystem::path> & dirPath,
     this->highScoreObj = highScoreObj;
     this->initConstants();
     this->initScoreStage();
+    this->initCurrentPlayer();
     this->initSpawningPatterns();
     this->initFormationVectors();
     this->initFormation();
@@ -103,11 +104,17 @@ void Level::initConstants() {
     this->currentState = STATES::playing;
 
     this->ordinarySize = 25;
+
+    this->players = {};
 }
 
 void Level::initScoreStage() {
     this->currentScore = std::make_shared<int>();
     this->currentStage = std::make_shared<int>(1);
+}
+
+void Level::initCurrentPlayer() {
+    this->currentPlayer = std::make_shared<bool>();
 }
 
 void Level::initFormationVectors() {
@@ -122,7 +129,9 @@ void Level::initFormation() {
 
 void Level::initSpawningPatterns() {
     std::string spawningPatternsPath = this->dir_path->string() + "\\Data\\Texts\\level.xml";
-    this->spawningPatterns.load_file(spawningPatternsPath.c_str());
+    if (!this->spawningPatterns.load_file(spawningPatternsPath.c_str())) {
+        throw std::invalid_argument("Spawning patterns file was not found");
+    }
 }
 
 void Level::initPlayer() {
@@ -148,7 +157,8 @@ void Level::initUI() {
                                     this->highScoreObj,
                                     this->player->getHealth(),
                                     this->currentScore,
-                                    this->currentStage);
+                                    this->currentStage,
+                                    this->currentPlayer);
 }
 
 void Level::initBackground() {
@@ -203,7 +213,7 @@ void Level::updateInput() {
                 this->player->move(1.f, 0.f);
             }
             if (canShoot) {
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && this->player->canAttack()) {
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && this->player->canAttack()) {
                     auto newBullet = this->initNewPlBullet();
                     auto tmp_bvl = -this->playerBulletsVelocity;
                     auto tmp_vel = 0.f;
@@ -633,12 +643,12 @@ void Level::handleDiving() {
 void Level::handleAllDied() {
     if (this->aliveCountZako == 0 && this->aliveCountGoei == 0 && this->aliveCountBoss == 0) {
         if (!this->capturedPlayer) {
-            this->reset();
             *(this->currentStage) += 1;
+            this->reset();
         } else {
             if (this->capturedPlayer->getCurrentState() == Enemy::STATES::dead && !this->capturedPlayer->playerRespawnUnDoubled) {
-                this->reset();
                 *(this->currentStage) += 1;
+                this->reset();
                 if (this->capturedPlayer) {
                     if (!this->player->getDoubledPlayer()) {
                         this->capturedPlayer = {};
@@ -696,7 +706,7 @@ void Level::handleGameOver() {
     }
 }
 
-void Level::fullReset() {
+void Level::fullReset(bool tp) {
     this->reset();
 
     this->player->reset();
@@ -756,6 +766,19 @@ void Level::fullReset() {
 
     this->gameOverTimer = {};
 
+    this->enemyShootCooldown = sf::milliseconds(3000);
+    this->zakoDiveDelay = 3.5f;
+    this->goeiDiveDelay = 6.f;
+    this->bossDiveDelay = 7.f;
+
+    if (!tp) {
+        *(this->currentPlayer) = false;
+    } else {
+        *(this->currentPlayer) = true;
+    }
+
+    this->players = {};
+
     this->currentState = STATES::playing;
 }
 
@@ -778,6 +801,30 @@ void Level::reset() {
     this->levelStartReadyTimer = {};
 
     this->spawningFinished = {};
+
+    int enemyshoot = 3000 - ((*(this->currentStage) - 1) * 100);
+    if (enemyshoot < 1000) {
+        enemyshoot = 1000;
+    }
+    this->enemyShootCooldown = sf::milliseconds(enemyshoot);
+
+    float zakodive = 3.5f - ((*(this->currentStage) - 1) * 0.1f);
+    if (zakodive < 1.f) {
+        zakodive = 1.f;
+    }
+    this->zakoDiveDelay = zakodive;
+
+    float goeidive = 6.f - ((*(this->currentStage) - 1) * 0.1f);
+    if (goeidive < 1.f) {
+        goeidive = 1.f;
+    }
+    this->goeiDiveDelay = goeidive;
+
+    float bossdive = 7.f - ((*(this->currentStage) - 1) * 0.1f);
+    if (bossdive < 1.f) {
+        bossdive = 1.f;
+    }
+    this->bossDiveDelay = bossdive;
 }
 
 void Level::handlePVE() {
@@ -1203,6 +1250,14 @@ void Level::updateEnemies() {
 void Level::updateCombat() {
     this->handlePVE();
     this->handleEVP();
+}
+
+void Level::setPlayers(const bool & pl) {
+    this->players = pl;
+}
+
+bool & Level::getPlayers() {
+    return this->players;
 }
 
 Level::STATES & Level::getCurrentState() {

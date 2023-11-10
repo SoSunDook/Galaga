@@ -31,3 +31,4 @@ add_executable(Galaga main.cpp
         Background.cpp
         Highscore.cpp)
 target_link_libraries(Galaga sfml-system sfml-window sfml-graphics sfml-audio)
+target_link_libraries(Galaga -static-libgcc -static-libstdc++ -static)

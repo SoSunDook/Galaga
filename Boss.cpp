@@ -131,7 +131,7 @@ void Boss::hit() {
         this->sprite.setTexture(*this->hitTexture);
         this->sprite.setScale(this->spriteScale, this->spriteScale);
         auto size = this->hitTexture->getSize();
-        sf::Vector2<int> point(static_cast<int>(size.x) / this->spriteDivisor, 0);
+        sf::Vector2<int> point(this->sprite.getTextureRect().getPosition().x, 0);
         sf::Vector2<int> vector(static_cast<int>(size.x) / this->spriteDivisor, static_cast<int>(size.y));
         const sf::Rect<int> rectangle(point, vector);
         this->sprite.setTextureRect(rectangle);

@@ -12,7 +12,8 @@ UI::UI(std::shared_ptr<std::filesystem::path> & dirPath,
        std::shared_ptr<Highscore> & highScoreObj,
        std::shared_ptr<int> & currentHealth,
        std::shared_ptr<int> & currentScore,
-       std::shared_ptr<int> & currentStage) {
+       std::shared_ptr<int> & currentStage,
+       std::shared_ptr<bool> & currentPlayer) {
     this->dir_path = dirPath;
     this->textureManager = textures;
     this->deltaTime = timer;
@@ -21,6 +22,7 @@ UI::UI(std::shared_ptr<std::filesystem::path> & dirPath,
     this->currentHealth = currentHealth;
     this->currentScore = currentScore;
     this->currentStage = currentStage;
+    this->currentPlayer = currentPlayer;
     this->highScoreObj = highScoreObj;
     this->initConstants();
     this->initLabels();
@@ -53,7 +55,7 @@ void UI::initLabels() {
                                         sf::Vector2<float>(810.f, 94.f),
                                         sf::Vector2<float>(810.f, 94.f));
     this->player = std::make_unique<Label>(this->font,
-                                        "1UP",
+                                        *(this->currentPlayer) ? "2UP" : "1UP",
                                         sf::Color::Red,
                                         this->ordinarySize,
                                         sf::Vector2<float>(757.5f, 169.f),
@@ -108,6 +110,9 @@ void UI::update() {
     if (*(this->currentScore) > this->highScoreObj->read()) {
         this->highScoreObj->write(*(this->currentScore));
         this->highScoreInt->update(std::to_string(this->highScoreObj->read()));
+    }
+    if ((*(this->currentPlayer) ? "2UP" : "1UP") != this->player->getText()) {
+        this->player->update(*(this->currentPlayer) ? "2UP" : "1UP");
     }
 }
 

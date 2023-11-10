@@ -130,8 +130,12 @@ private:
     float gameOverDelay;
     float gameOverTimer;
 
+    bool players;
+    std::shared_ptr<bool> currentPlayer;
+
     void initConstants();
     void initScoreStage();
+    void initCurrentPlayer();
     void initFormationVectors();
     void initFormation();
     void initSpawningPatterns();
@@ -169,9 +173,13 @@ public:
                    std::shared_ptr<Highscore> & highScoreObj);
     ~Level() = default;
 
+    void setPlayers(const bool & pl);
+
+    bool & getPlayers();
+
     STATES & getCurrentState();
 
-    void fullReset();
+    void fullReset(bool tp = false);
 
     void update();
 
