@@ -6,6 +6,7 @@
 #define GALAGA_PLAYER_H
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+#include <SFML/Audio.hpp>
 #include <memory>
 
 class Player {
@@ -20,6 +21,8 @@ private:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
     sf::Sprite spriteDoubled;
+
+    sf::Sound deathSound;
 
     float spriteScale;
 
@@ -68,9 +71,10 @@ private:
     void initSprite();
     void initOrigin();
     void setStartPos();
+    void initDeathSound(std::shared_ptr<sf::SoundBuffer> & managedDeathSound, float & volume);
 public:
-    explicit Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture,
-                    float & velocity, sf::Time & playerShootCooldown, float & spriteScale);
+    explicit Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture, std::shared_ptr<sf::SoundBuffer> & managedDeathSound,
+                    float & velocity, sf::Time & playerShootCooldown, float & spriteScale, float & volume);
     ~Player() = default;
 
     void toGetHit(bool side = false);

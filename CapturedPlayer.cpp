@@ -5,9 +5,24 @@
 #include <iostream>
 #include "CapturedPlayer.h"
 
-CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
-                               std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedPlayerTexture, std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,
-                               float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
+CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer,
+                               std::shared_ptr<BezierPath> & spawningPath,
+                               std::shared_ptr<Formation> & enemyFormationPtr,
+                               std::shared_ptr<Boss> & divingBoss,
+                               std::shared_ptr<Player> & player,
+                               std::shared_ptr<sf::Texture> & managedDeathTexture,
+                               std::shared_ptr<sf::Texture> & managedPlayerTexture,
+                               std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,
+                               std::shared_ptr<sf::SoundBuffer> & managedDeathSound,
+                               std::shared_ptr<sf::SoundBuffer> & managedDiveSound,
+                               std::shared_ptr<sf::SoundBuffer> & managedFighterCaptured,
+                               std::shared_ptr<sf::SoundBuffer> & managedFighterRescued,
+                               float & volume,
+                               float & velocity,
+                               float & enemyRotationVelocity,
+                               sf::Time & enemyShootCooldown,
+                               float & spriteScale,
+                               int enemyIndex) {
     this->healthPoints = 1;
     this->worthPoints = 1000;
     this->type = TYPES::capturedPlayer;
@@ -41,6 +56,10 @@ CapturedPlayer::CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_pt
         this->initSpawnPath(spawningPath);
         this->initSpawnPosition();
     }
+    this->initHitSound(managedDeathSound, volume);
+    this->initDiveSound(managedDiveSound, volume);
+    this->initFighterCapturedSound(managedFighterCaptured, volume);
+    this->initFighterRescuedSound(managedFighterRescued, volume);
 }
 
 void CapturedPlayer::initSprite() {
@@ -51,6 +70,16 @@ void CapturedPlayer::initSprite() {
     sf::Vector2<int> vector(static_cast<int>(size.x), static_cast<int>(size.y));
     const sf::Rect<int> rectangle(point, vector);
     this->sprite.setTextureRect(rectangle);
+}
+
+void CapturedPlayer::initFighterCapturedSound(std::shared_ptr<sf::SoundBuffer> & managedFighterCaptured, float & volume) {
+    this->fighterCaptured.setBuffer(*(managedFighterCaptured));
+    this->fighterCaptured.setVolume(volume);
+}
+
+void CapturedPlayer::initFighterRescuedSound(std::shared_ptr<sf::SoundBuffer> & managedFighterRescued, float & volume) {
+    this->fighterRescued.setBuffer(*(managedFighterRescued));
+    this->fighterRescued.setVolume(volume);
 }
 
 void CapturedPlayer::initSpriteSaved() {
@@ -106,6 +135,9 @@ void CapturedPlayer::handleDiveState() {
 }
 
 void CapturedPlayer::handleOnlyCapturedState() {
+    if (this->fighterCaptured.getStatus() != sf::Sound::Playing) {
+        this->fighterCaptured.play();
+    }
     sf::Vector2f endPoint = startPos;
     sf::Vector2f direction = endPoint - this->sprite.getPosition();
     float rotation = 180;
@@ -136,10 +168,16 @@ void CapturedPlayer::handleOnlyCapturedWithBossState() {
     } else {
         this->joinFormation();
         this->currentCapturedState = CAPTURED_STATES::normal;
+        if (this->fighterCaptured.getStatus() != sf::Sound::Stopped) {
+            this->fighterCaptured.stop();
+        }
     }
 }
 
 void CapturedPlayer::handleBossShotWhileDivingState() {
+    if (this->currentState != Enemy::STATES::dead && this->fighterRescued.getStatus() != sf::Sound::Playing) {
+        this->fighterRescued.play();
+    }
     if (!reachedFirstEndPoint) {
         sf::Vector2f endPoint = {360 + this->sprite.getOrigin().x * this->spriteScale, 570.f};
         sf::Vector2f direction = endPoint - this->sprite.getPosition();
@@ -164,6 +202,9 @@ void CapturedPlayer::handleBossShotWhileDivingState() {
             if (distance > movement) {
                 this->sprite.move((direction / distance) * movement);
             } else {
+                if (this->fighterRescued.getStatus() != sf::Sound::Stopped) {
+                    this->fighterRescued.stop();
+                }
                 this->currentState = Enemy::STATES::dead;
                 this->playerLocked = false;
                 this->playerDoubled = true;
@@ -181,6 +222,9 @@ void CapturedPlayer::handleBossShotWhileDivingState() {
             if (distance > movement) {
                 this->sprite.move((direction / distance) * movement);
             } else {
+                if (this->fighterRescued.getStatus() != sf::Sound::Stopped) {
+                    this->fighterRescued.stop();
+                }
                 this->currentState = Enemy::STATES::dead;
                 this->playerRespawnUnDoubled = true;
                 this->visitedLastRespawn = true;

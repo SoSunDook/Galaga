@@ -5,9 +5,19 @@
 #include <iostream>
 #include "Goei.h"
 
-Goei::Goei(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
-           std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture,
-           float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
+Goei::Goei(std::shared_ptr<sf::Time> & timer,
+           std::shared_ptr<BezierPath> & spawningPath,
+           std::shared_ptr<Formation> & enemyFormationPtr,
+           std::shared_ptr<sf::Texture> & managedDeathTexture,
+           std::shared_ptr<sf::Texture> & managedTexture,
+           std::shared_ptr<sf::SoundBuffer> & managedDeathSound,
+           std::shared_ptr<sf::SoundBuffer> & managedDiveSound,
+           float & volume,
+           float & velocity,
+           float & enemyRotationVelocity,
+           sf::Time & enemyShootCooldown,
+           float & spriteScale,
+           int enemyIndex) {
     this->healthPoints = 1;
     this->worthPoints = 80;
     this->type = TYPES::goei;
@@ -26,6 +36,8 @@ Goei::Goei(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spaw
     this->initOrigin();
     this->initRotation();
     this->initSpawnPosition();
+    this->initHitSound(managedDeathSound, volume);
+    this->initDiveSound(managedDiveSound, volume);
 }
 
 sf::Vector2<float> Goei::localFormationPosition() {

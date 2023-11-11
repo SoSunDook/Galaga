@@ -9,6 +9,38 @@ void Game::initConstants() {
     this->currentState = STATES::MENU;
 }
 
+void Game::initVectors() {
+    this->texturesVector = {"beam",
+                            "bg_back",
+                            "bg_front",
+                            "black",
+                            "boss",
+                            "boss2",
+                            "bulletPlayer",
+                            "enemyBullet",
+                            "explosion",
+                            "galaga",
+                            "galagaLogo",
+                            "galagaRed",
+                            "goei",
+                            "obla",
+                            "playerExplosion",
+                            "zako"};
+    this->soundsVector = {"bossHit1",
+                          "bossHit2",
+                          "capturedHit",
+                          "enemyDive",
+                          "fighterCaptured",
+                          "fighterRescued",
+                          "goeiHit",
+                          "playerHit",
+                          "playerShoot",
+                          "stageFlag",
+                          "startMusic",
+                          "tractorBeamShoot",
+                          "zakoHit"};
+}
+
 void Game::initDeltaTime() {
     this->deltaTime = std::make_shared<sf::Time>();
 }
@@ -18,10 +50,19 @@ void Game::initWindow() {
     this->window->setFramerateLimit(600);
 }
 
+void Game::initIcon() {
+    sf::Image ico;
+    std::filesystem::path path = *(this->dir_path) / "Data" / "galagaicon.png";
+    if (!ico.loadFromFile(path.string())) {
+        throw std::invalid_argument("Icon can not be loaded");
+    }
+    this->window->setIcon(ico.getSize().x, ico.getSize().y, ico.getPixelsPtr());
+}
+
 void Game::initFont() {
     this->font = std::make_shared<sf::Font>();
-    std::string path = this->dir_path->string() + "\\Data\\Fonts\\Emulogic-zrEw.ttf";
-    if (!this->font->loadFromFile(path)) {
+    std::filesystem::path path = *(this->dir_path) / "Data" / "Fonts" / "Emulogic-zrEw.ttf";
+    if (!this->font->loadFromFile(path.string())) {
         throw std::invalid_argument("Font can not be loaded");
     }
     this->font->setSmooth(false);
@@ -29,8 +70,7 @@ void Game::initFont() {
 
 void Game::initTextures() {
     this->textureManager = std::make_shared<std::map<std::string, std::shared_ptr<sf::Texture>>>();
-    std::string path(this->dir_path->string());
-    path.append("\\Data\\Textures");
+    std::filesystem::path path = *(this->dir_path) / "Data" / "Textures";
     for (const auto & entry : std::filesystem::directory_iterator(path)) {
         auto entryPath = &entry.path();
         auto fileName = entryPath->stem().string();
@@ -39,6 +79,30 @@ void Game::initTextures() {
             throw std::invalid_argument(fileName + " image can not be loaded");
         }
         this->textureManager->operator[](fileName) = tmpTexture;
+    }
+    for (const auto & name : this->texturesVector) {
+        if (!this->textureManager->contains(name)) {
+            throw std::invalid_argument(name + " image can not be loaded");
+        }
+    }
+}
+
+void Game::initSounds() {
+    this->soundManager = std::make_shared<std::map<std::string, std::shared_ptr<sf::SoundBuffer>>>();
+    std::filesystem::path path = *(this->dir_path) / "Data" / "Sound";
+    for (const auto & entry : std::filesystem::directory_iterator(path)) {
+        auto entryPath = &entry.path();
+        auto fileName = entryPath->stem().string();
+        auto tmpBuffer = std::make_shared<sf::SoundBuffer>();
+        if (!tmpBuffer->loadFromFile(entryPath->string())) {
+            throw std::invalid_argument(fileName + " sound can not be loaded");
+        }
+        this->soundManager->operator[](fileName) = tmpBuffer;
+    }
+    for (const auto & name : this->soundsVector) {
+        if (!this->soundManager->contains(name)) {
+            throw std::invalid_argument(name + " image can not be loaded");
+        }
     }
 }
 
@@ -471,6 +535,7 @@ void Game::initMenu() {
 void Game::initLevel() {
     this->level = std::make_unique<Level>(this->dir_path,
                                           this->textureManager,
+                                          this->soundManager,
                                           this->pathManager,
                                           this->deltaTime,
                                           this->window,
@@ -481,10 +546,13 @@ void Game::initLevel() {
 Game::Game() {
     this->dir_path = std::make_shared<std::filesystem::path>(std::filesystem::current_path());
     this->initConstants();
+    this->initVectors();
     this->initDeltaTime();
     this->initWindow();
+    this->initIcon();
     this->initFont();
     this->initTextures();
+    this->initSounds();
     this->initPaths();
     this->initHighScore();
     this->initMenu();
@@ -512,6 +580,7 @@ void Game::handleLevelState() {
     } else if (this->level->getCurrentState() == Level::STATES::gameOver) {
         this->currentState = STATES::MENU;
         this->menu->reset();
+        this->level->fullReset();
     }
 }
 

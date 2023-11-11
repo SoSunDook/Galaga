@@ -6,6 +6,7 @@
 #define GALAGA_ENEMY_H
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+#include <SFML/Audio.hpp>
 #include <memory>
 #include <valarray>
 #include "BezierPath.h"
@@ -28,6 +29,9 @@ public:
 protected:
     std::shared_ptr<sf::Texture> texture;
     sf::Sprite sprite;
+
+    sf::Sound hitSound;
+    sf::Sound diveSound;
 
     std::shared_ptr<sf::Texture> deathTexture;
 
@@ -75,6 +79,8 @@ protected:
     void initOrigin();
     void initRotation();
     void initSpawnPosition();
+    void initHitSound(std::shared_ptr<sf::SoundBuffer> & managedDeathSound, float & volume);
+    void initDiveSound(std::shared_ptr<sf::SoundBuffer> & managedDiveSound, float & volume);
 protected:
     virtual sf::Vector2<float> localFormationPosition() = 0;
     sf::Vector2<float> globalFormationPosition();

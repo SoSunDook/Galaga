@@ -28,6 +28,9 @@ private:
 
     CAPTURED_STATES currentCapturedState;
 
+    sf::Sound fighterCaptured;
+    sf::Sound fighterRescued;
+
     sf::Vector2<float> localFormationPosition() override;
 
     void handleDiveState() override;
@@ -47,6 +50,8 @@ private:
     bool reachedFirstEndPoint;
 
     void initSprite() override;
+    void initFighterCapturedSound(std::shared_ptr<sf::SoundBuffer> & managedFighterCaptured, float & volume);
+    void initFighterRescuedSound(std::shared_ptr<sf::SoundBuffer> & managedFighterRescued, float & volume);
 public:
     bool playerLocked;
 
@@ -55,9 +60,24 @@ public:
     bool playerDoubled;
     bool playerRespawnUnDoubled;
 public:
-    explicit CapturedPlayer(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr, std::shared_ptr<Boss> & divingBoss, std::shared_ptr<Player> & player,
-                  std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedPlayerTexture, std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,
-                  float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
+    explicit CapturedPlayer(std::shared_ptr<sf::Time> & timer,
+                            std::shared_ptr<BezierPath> & spawningPath,
+                            std::shared_ptr<Formation> & enemyFormationPtr,
+                            std::shared_ptr<Boss> & divingBoss,
+                            std::shared_ptr<Player> & player,
+                            std::shared_ptr<sf::Texture> & managedDeathTexture,
+                            std::shared_ptr<sf::Texture> & managedPlayerTexture,
+                            std::shared_ptr<sf::Texture> & managedCapturedPlayerTexture,
+                            std::shared_ptr<sf::SoundBuffer> & managedDeathSound,
+                            std::shared_ptr<sf::SoundBuffer> & managedDiveSound,
+                            std::shared_ptr<sf::SoundBuffer> & managedFighterCaptured,
+                            std::shared_ptr<sf::SoundBuffer> & managedFighterRescued,
+                            float & volume,
+                            float & velocity,
+                            float & enemyRotationVelocity,
+                            sf::Time & enemyShootCooldown,
+                            float & spriteScale,
+                            int enemyIndex);
     ~CapturedPlayer() = default;
 
     void die() override;

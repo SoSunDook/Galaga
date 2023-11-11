@@ -11,12 +11,17 @@ class Boss : public Enemy {
 private:
     std::shared_ptr<sf::Texture> hitTexture;
 
+    sf::Sound hit2Sound;
+    sf::Sound beamShoot;
+
     CaptureBeam captureBeam;
 
     bool captureDive;
 
     bool capturing;
 
+    void initHit1Sound(std::shared_ptr<sf::SoundBuffer> & managedHit2Sound, float & volume);
+    void initBeamShootSound(std::shared_ptr<sf::SoundBuffer> & managedBeamShoot, float & volume);
     void initCaptureBeam(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedBeamTexture);
 
     sf::Vector2<float> localFormationPosition() override;
@@ -29,9 +34,23 @@ private:
 public:
     bool captured;
 public:
-    explicit Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
-                  std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedBossTexture, std::shared_ptr<sf::Texture> & managedBossHitTexture, std::shared_ptr<sf::Texture> & managedBeamTexture,
-                  float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
+    explicit Boss(std::shared_ptr<sf::Time> & timer,
+                  std::shared_ptr<BezierPath> & spawningPath,
+                  std::shared_ptr<Formation> & enemyFormationPtr,
+                  std::shared_ptr<sf::Texture> & managedDeathTexture,
+                  std::shared_ptr<sf::Texture> & managedBossTexture,
+                  std::shared_ptr<sf::Texture> & managedBossHitTexture,
+                  std::shared_ptr<sf::Texture> & managedBeamTexture,
+                  std::shared_ptr<sf::SoundBuffer> & managedHit1Sound,
+                  std::shared_ptr<sf::SoundBuffer> & managedHit2Sound,
+                  std::shared_ptr<sf::SoundBuffer> & managedDiveSound,
+                  std::shared_ptr<sf::SoundBuffer> & managedBeamShoot,
+                  float & volume,
+                  float & velocity,
+                  float & enemyRotationVelocity,
+                  sf::Time & enemyShootCooldown,
+                  float & spriteScale,
+                  int enemyIndex);
     ~Boss() = default;
 
     void toDive(bool tp = false) override;

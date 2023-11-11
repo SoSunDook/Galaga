@@ -5,9 +5,23 @@
 #include <iostream>
 #include "Boss.h"
 
-Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
-           std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedBossTexture, std::shared_ptr<sf::Texture> & managedBossHitTexture, std::shared_ptr<sf::Texture> & managedBeamTexture,
-           float & velocity,float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex) {
+Boss::Boss(std::shared_ptr<sf::Time> & timer,
+           std::shared_ptr<BezierPath> & spawningPath,
+           std::shared_ptr<Formation> & enemyFormationPtr,
+           std::shared_ptr<sf::Texture> & managedDeathTexture,
+           std::shared_ptr<sf::Texture> & managedBossTexture,
+           std::shared_ptr<sf::Texture> & managedBossHitTexture,
+           std::shared_ptr<sf::Texture> & managedBeamTexture,
+           std::shared_ptr<sf::SoundBuffer> & managedHit1Sound,
+           std::shared_ptr<sf::SoundBuffer> & managedHit2Sound,
+           std::shared_ptr<sf::SoundBuffer> & managedDiveSound,
+           std::shared_ptr<sf::SoundBuffer> & managedBeamShoot,
+           float & volume,
+           float & velocity,
+           float & enemyRotationVelocity,
+           sf::Time & enemyShootCooldown,
+           float & spriteScale,
+           int enemyIndex) {
     this->healthPoints = 2;
     this->worthPoints = 150;
     this->type = TYPES::boss;
@@ -31,6 +45,20 @@ Boss::Boss(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spaw
     this->initRotation();
     this->initSpawnPosition();
     this->initCaptureBeam(timer, managedBeamTexture);
+    this->initHitSound(managedHit2Sound, volume);
+    this->initHit1Sound(managedHit1Sound, volume);
+    this->initDiveSound(managedDiveSound, volume);
+    this->initBeamShootSound(managedBeamShoot, volume);
+}
+
+void Boss::initHit1Sound(std::shared_ptr<sf::SoundBuffer> & managedHit2Sound, float & volume) {
+    this->hit2Sound.setBuffer(*(managedHit2Sound));
+    this->hit2Sound.setVolume(volume);
+}
+
+void Boss::initBeamShootSound(std::shared_ptr<sf::SoundBuffer> & managedBeamShoot, float & volume) {
+    this->beamShoot.setBuffer(*(managedBeamShoot));
+    this->beamShoot.setVolume(volume);
 }
 
 void Boss::initCaptureBeam(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedBeamTexture) {
@@ -52,7 +80,10 @@ void Boss::handleCaptureBeam() {
     this->captureBeam.update();
 
     if (this->captureBeam.finishedAnimation()) {
-        if (!captured) {
+        if (this->beamShoot.getStatus() != sf::Sound::Stopped) {
+            this->beamShoot.stop();
+        }
+        if (!this->captured) {
             sf::Vector2f direction = sf::Vector2<float>(this->sprite.getPosition().x, 740.f) - this->sprite.getPosition();
             this->setWantedRotation(direction.x, direction.y);
             float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
@@ -73,6 +104,12 @@ void Boss::handleCaptureBeam() {
             } else {
                 this->joinFormation();
                 this->capturing = false;
+            }
+        }
+    } else {
+        if (this->captured) {
+            if (this->beamShoot.getStatus() != sf::Sound::Stopped) {
+                this->beamShoot.stop();
             }
         }
     }
@@ -98,6 +135,7 @@ void Boss::handleDiveState() {
 
         if (this->currentPoint >= this->currentPath->getPath().size()) {
             if (this->captureDive) {
+                this->beamShoot.play();
                 this->capturing = true;
                 float rotation = 180.f;
                 this->setWantedRotation(rotation);
@@ -128,6 +166,8 @@ void Boss::handleDiveState() {
 void Boss::hit() {
     Enemy::hit();
     if (this->healthPoints == 1) {
+        this->hit2Sound.play();
+
         this->sprite.setTexture(*this->hitTexture);
         this->sprite.setScale(this->spriteScale, this->spriteScale);
         auto size = this->hitTexture->getSize();
@@ -136,6 +176,8 @@ void Boss::hit() {
         const sf::Rect<int> rectangle(point, vector);
         this->sprite.setTextureRect(rectangle);
         this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
+    } else {
+        this->hitSound.play();
     }
 }
 

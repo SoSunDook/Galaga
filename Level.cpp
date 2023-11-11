@@ -6,6 +6,7 @@
 
 Level::Level(std::shared_ptr<std::filesystem::path> & dirPath,
             std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
+            std::shared_ptr<std::map<std::string, std::shared_ptr<sf::SoundBuffer>>> & sounds,
             std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & pathManager,
             std::shared_ptr<sf::Time> & timer,
             std::shared_ptr<sf::RenderWindow> & window,
@@ -13,6 +14,7 @@ Level::Level(std::shared_ptr<std::filesystem::path> & dirPath,
             std::shared_ptr<Highscore> & highScoreObj) {
     this->dir_path = dirPath;
     this->textureManager = textures;
+    this->soundManager = sounds;
     this->pathManager = pathManager;
     this->deltaTime = timer;
     this->window = window;
@@ -28,6 +30,7 @@ Level::Level(std::shared_ptr<std::filesystem::path> & dirPath,
     this->initMidLabel();
     this->initUI();
     this->initBackground();
+    this->initSounds();
 }
 
 void Level::initConstants() {
@@ -106,6 +109,8 @@ void Level::initConstants() {
     this->ordinarySize = 25;
 
     this->players = {};
+
+    this->overallVolume = 25.f;
 }
 
 void Level::initScoreStage() {
@@ -128,15 +133,15 @@ void Level::initFormation() {
 }
 
 void Level::initSpawningPatterns() {
-    std::string spawningPatternsPath = this->dir_path->string() + "\\Data\\Texts\\level.xml";
-    if (!this->spawningPatterns.load_file(spawningPatternsPath.c_str())) {
+    std::filesystem::path path = *(this->dir_path) / "Data" / "Texts" / "level.xml";
+    if (!this->spawningPatterns.load_file(path.c_str())) {
         throw std::invalid_argument("Spawning patterns file was not found");
     }
 }
 
 void Level::initPlayer() {
-    this->player = std::make_shared<Player>(this->deltaTime, this->textureManager->operator[]("playerExplosion"), this->textureManager->operator[]("galaga"),
-                                            this->playerVelocity, this->playerShootCooldown, this->playersScale);
+    this->player = std::make_shared<Player>(this->deltaTime, this->textureManager->operator[]("playerExplosion"), this->textureManager->operator[]("galaga"), this->soundManager->operator[]("playerHit"),
+                                            this->playerVelocity, this->playerShootCooldown, this->playersScale, this->overallVolume);
 }
 
 void Level::initMidLabel() {
@@ -166,6 +171,15 @@ void Level::initBackground() {
                                                     this->deltaTime,
                                                     sf::Vector2<float>(360.f, 360.f),
                                                     1.f);
+}
+
+void Level::initSounds() {
+    this->startSound.setBuffer(*(this->soundManager->operator[]("startMusic")));
+    this->startSound.setVolume(this->overallVolume);
+    this->stageSound.setBuffer(*(this->soundManager->operator[]("stageFlag")));
+    this->stageSound.setVolume(this->overallVolume);
+    this->playerShootSound.setBuffer(*(this->soundManager->operator[]("playerShoot")));
+    this->playerShootSound.setVolume(this->overallVolume);
 }
 
 std::shared_ptr<PlayerBullet> Level::initNewPlBullet() {
@@ -214,6 +228,7 @@ void Level::updateInput() {
             }
             if (canShoot) {
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && this->player->canAttack()) {
+                    this->playerShootSound.play();
                     auto newBullet = this->initNewPlBullet();
                     auto tmp_bvl = -this->playerBulletsVelocity;
                     auto tmp_vel = 0.f;
@@ -324,27 +339,61 @@ void Level::handleSpawning() {
 
                     if (type == "zako") {
 
-                        auto new_enemy_zako = std::make_shared<Zako>(this->deltaTime, this->pathManager->operator[](path), this->formation,
-                                                                     this->textureManager->operator[]("explosion"), this->textureManager->operator[]("zako"),
-                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
+                        auto new_enemy_zako = std::make_shared<Zako>(this->deltaTime,
+                                                                                     this->pathManager->operator[](path),
+                                                                                     this->formation,
+                                                                                     this->textureManager->operator[]("explosion"),
+                                                                                     this->textureManager->operator[]("zako"),
+                                                                                     this->soundManager->operator[]("zakoHit"),
+                                                                                     this->soundManager->operator[]("enemyDive"),
+                                                                                     this->overallVolume,
+                                                                                     this->enemyVelocity,
+                                                                                     this->enemyRotationVelocity,
+                                                                                     this->enemyShootCooldown,
+                                                                                     this->enemiesScale,
+                                                                                     index);
                         this->formationZakos.at(index) = new_enemy_zako;
                         this->currentCountZako++;
                         this->aliveCountZako++;
 
                     } else if (type == "goei") {
 
-                        auto new_enemy_goei = std::make_shared<Goei>(this->deltaTime, this->pathManager->operator[](path), this->formation,
-                                                                     this->textureManager->operator[]("explosion"), this->textureManager->operator[]("goei"),
-                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
+                        auto new_enemy_goei = std::make_shared<Goei>(this->deltaTime,
+                                                                                     this->pathManager->operator[](path),
+                                                                                     this->formation,
+                                                                                     this->textureManager->operator[]("explosion"),
+                                                                                     this->textureManager->operator[]("goei"),
+                                                                                     this->soundManager->operator[]("goeiHit"),
+                                                                                     this->soundManager->operator[]("enemyDive"),
+                                                                                     this->overallVolume,
+                                                                                     this->enemyVelocity,
+                                                                                     this->enemyRotationVelocity,
+                                                                                     this->enemyShootCooldown,
+                                                                                     this->enemiesScale,
+                                                                                     index);
                         this->formationGoeis.at(index) = new_enemy_goei;
                         this->currentCountGoei++;
                         this->aliveCountGoei++;
 
                     } else if (type == "boss") {
 
-                        auto new_enemy_boss = std::make_shared<Boss>(this->deltaTime, this->pathManager->operator[](path), this->formation,
-                                                                     this->textureManager->operator[]("explosion"), this->textureManager->operator[]("boss"), this->textureManager->operator[]("boss2"), this->textureManager->operator[]("beam"),
-                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->enemiesScale, index);
+                        auto new_enemy_boss = std::make_shared<Boss>(this->deltaTime,
+                                                                                 this->pathManager->operator[](path),
+                                                                                 this->formation,
+                                                                                 this->textureManager->operator[]("explosion"),
+                                                                                 this->textureManager->operator[]("boss"),
+                                                                                 this->textureManager->operator[]("boss2"),
+                                                                                 this->textureManager->operator[]("beam"),
+                                                                                 this->soundManager->operator[]("bossHit1"),
+                                                                                 this->soundManager->operator[]("bossHit2"),
+                                                                                 this->soundManager->operator[]("enemyDive"),
+                                                                                 this->soundManager->operator[]("tractorBeamShoot"),
+                                                                                 this->overallVolume,
+                                                                                 this->enemyVelocity,
+                                                                                 this->enemyRotationVelocity,
+                                                                                 this->enemyShootCooldown,
+                                                                                 this->enemiesScale,
+                                                                                 index);
                         this->formationBosses.at(index) = new_enemy_boss;
                         this->currentCountBoss++;
                         this->aliveCountBoss++;
@@ -352,9 +401,24 @@ void Level::handleSpawning() {
                     } else if (type == "capturedPlayer") {
                         if (this->savedCapturedPlayer) {
                             if (this->formationBosses[this->savedCapturedPlayerIndex]->getCurrentState() != Enemy::STATES::dead) {
-                                this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime, this->pathManager->operator[](path), this->formation, this->formationBosses[this->savedCapturedPlayerIndex], this->player,
-                                                                     this->textureManager->operator[]("explosion"), this->textureManager->operator[]("galaga"), this->textureManager->operator[]("galagaRed"),
-                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->playersScale, this->savedCapturedPlayerIndex);
+                                this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime,
+                                                                                        this->pathManager->operator[](path),
+                                                                                        this->formation,
+                                                                                        this->formationBosses[this->savedCapturedPlayerIndex],
+                                                                                        this->player,
+                                                                                        this->textureManager->operator[]("explosion"),
+                                                                                        this->textureManager->operator[]("galaga"),
+                                                                                        this->textureManager->operator[]("galagaRed"),
+                                                                                        this->soundManager->operator[]("capturedHit"),
+                                                                                        this->soundManager->operator[]("enemyDive"),
+                                                                                        this->soundManager->operator[]("fighterCaptured"),
+                                                                                        this->soundManager->operator[]("fighterRescued"),
+                                                                                        this->overallVolume,
+                                                                                        this->enemyVelocity,
+                                                                                        this->enemyRotationVelocity,
+                                                                                        this->enemyShootCooldown,
+                                                                                        this->playersScale,
+                                                                                        this->savedCapturedPlayerIndex);
                                 this->capturedPlayer->setCapturedState(CapturedPlayer::CAPTURED_STATES::normal);
                                 this->capturedPlayer->setState(Enemy::flyIn);
                                 this->capturedPlayer->initSpriteSaved();
@@ -520,7 +584,7 @@ void Level::handleDiving() {
                 this->divingBoss->setPath(this->pathManager->operator[](path));
                 this->divingBoss->toDive();
                 this->capturedPlayer->setPath(this->pathManager->operator[](path));
-                this->capturedPlayer->toDive();
+                this->capturedPlayer->toDive(true);
 
                 int index = this->divingBoss->getIndex();
                 int firstEscortIndex = (index % 2 == 0) ? (index * 2) : (index * 2 - 1);
@@ -1134,9 +1198,24 @@ void Level::handleEVP() {
             if (this->divingBoss->getCapturing()) {
                 if (this->divingBoss->getCaptureBeam().getGlobalBounds().intersects(this->player->getGlobalBoundsMain())) {
                     std::shared_ptr<BezierPath> tmp = {};
-                    this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime, tmp, this->formation, this->divingBoss, this->player,
-                                                                     this->textureManager->operator[]("explosion"), this->textureManager->operator[]("galaga"), this->textureManager->operator[]("galagaRed"),
-                                                                     this->enemyVelocity, this->enemyRotationVelocity, this->enemyShootCooldown, this->playersScale, this->divingBoss->getIndex());
+                    this->capturedPlayer = std::make_shared<CapturedPlayer>(this->deltaTime,
+                                                                            tmp,
+                                                                            this->formation,
+                                                                            this->divingBoss,
+                                                                            this->player,
+                                                                            this->textureManager->operator[]("explosion"),
+                                                                            this->textureManager->operator[]("galaga"),
+                                                                            this->textureManager->operator[]("galagaRed"),
+                                                                            this->soundManager->operator[]("capturedHit"),
+                                                                            this->soundManager->operator[]("enemyDive"),
+                                                                            this->soundManager->operator[]("fighterCaptured"),
+                                                                            this->soundManager->operator[]("fighterRescued"),
+                                                                            this->overallVolume,
+                                                                            this->enemyVelocity,
+                                                                            this->enemyRotationVelocity,
+                                                                            this->enemyShootCooldown,
+                                                                            this->playersScale,
+                                                                            this->divingBoss->getIndex());
                     auto playerPosition = this->player->getGlobalBoundsMain().getPosition() + this->player->getOrigin() * this->playersScale;
                     this->capturedPlayer->setPosition(playerPosition.x, playerPosition.y);
                     this->player->toGetCaptured();
@@ -1285,6 +1364,9 @@ void Level::update() {
                     this->showMidLabel = true;
                 }
             } else {
+                if (this->startSound.getStatus() == sf::Sound::Stopped && this->levelStartStageTimer == 0) {
+                    this->stageSound.play();
+                }
                 if ("STAGE " + std::to_string(*(this->currentStage)) != this->midLabel->getText()) {
                     this->midLabel->update("STAGE " + std::to_string(*(this->currentStage)));
                 }
@@ -1292,6 +1374,9 @@ void Level::update() {
                 this->showMidLabel = true;
             }
         } else {
+            if (this->levelStartStartTimer == 0) {
+                this->startSound.play();
+            }
             if ("START" != this->midLabel->getText()) {
                 this->midLabel->update("START");
             }

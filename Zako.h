@@ -11,12 +11,20 @@ private:
     sf::Vector2<float> localFormationPosition() override;
 
     void handleDiveState() override;
-
-//    void handleDeadState() override;
 public:
-    explicit Zako(std::shared_ptr<sf::Time> & timer, std::shared_ptr<BezierPath> & spawningPath, std::shared_ptr<Formation> & enemyFormationPtr,
-                  std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture,
-                  float & velocity, float & enemyRotationVelocity, sf::Time & enemyShootCooldown, float & spriteScale, int enemyIndex);
+    explicit Zako(std::shared_ptr<sf::Time> & timer,
+                  std::shared_ptr<BezierPath> & spawningPath,
+                  std::shared_ptr<Formation> & enemyFormationPtr,
+                  std::shared_ptr<sf::Texture> & managedDeathTexture,
+                  std::shared_ptr<sf::Texture> & managedTexture,
+                  std::shared_ptr<sf::SoundBuffer> & managedDeathSound,
+                  std::shared_ptr<sf::SoundBuffer> & managedDiveSound,
+                  float & volume,
+                  float & velocity,
+                  float & enemyRotationVelocity,
+                  sf::Time & enemyShootCooldown,
+                  float & spriteScale,
+                  int enemyIndex);
     ~Zako() = default;
 };
 

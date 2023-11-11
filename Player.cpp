@@ -30,8 +30,13 @@ void Player::setStartPos() {
     this->startPos = {startPosX, startPosY};
 }
 
-Player::Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture,
-               float & velocity, sf::Time & playerShootCooldown, float & spriteScale) {
+void Player::initDeathSound(std::shared_ptr<sf::SoundBuffer> & managedDeathSound, float & volume) {
+    this->deathSound.setBuffer(*(managedDeathSound));
+    this->deathSound.setVolume(volume);
+}
+
+Player::Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> & managedDeathTexture, std::shared_ptr<sf::Texture> & managedTexture, std::shared_ptr<sf::SoundBuffer> & managedDeathSound,
+               float & velocity, sf::Time & playerShootCooldown, float & spriteScale, float & volume) {
     this->velocity = velocity;
     this->playerShootCooldown = playerShootCooldown;
     this->playerShootTimer = {};
@@ -54,6 +59,7 @@ Player::Player(std::shared_ptr<sf::Time> & timer, std::shared_ptr<sf::Texture> &
     this->initSprite();
     this->initOrigin();
     this->setStartPos();
+    this->initDeathSound(managedDeathSound, volume);
 }
 
 void Player::render(sf::RenderTarget & target) {
@@ -277,6 +283,7 @@ void Player::toDouble() {
 }
 
 void Player::toGetHit(bool side) {
+    this->deathSound.play();
     if (!this->doubledPlayer) {
         *(this->healthPoints) -= 1;
         this->die();

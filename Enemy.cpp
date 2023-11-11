@@ -54,6 +54,16 @@ void Enemy::initOrigin() {
     this->sprite.setOrigin(this->sprite.getLocalBounds().getSize() / 2.f);
 }
 
+void Enemy::initHitSound(std::shared_ptr<sf::SoundBuffer> & managedDeathSound, float & volume) {
+    this->hitSound.setBuffer(*(managedDeathSound));
+    this->hitSound.setVolume(volume);
+}
+
+void Enemy::initDiveSound(std::shared_ptr<sf::SoundBuffer> & managedDiveSound, float & volume) {
+    this->diveSound.setBuffer(*(managedDiveSound));
+    this->diveSound.setVolume(volume);
+}
+
 void Enemy::render(sf::RenderTarget & target) {
     target.draw(this->sprite);
 
@@ -285,6 +295,13 @@ void Enemy::handleDeadState() {
 void Enemy::toDive(bool tp) {
     this->currentState = STATES::dive;
     this->diveStartPosition = this->sprite.getPosition();
+    if (tp) {
+        if (this->type == Enemy::TYPES::boss) {
+            this->diveSound.play();
+        }
+    } else {
+        this->diveSound.play();
+    }
 }
 
 void Enemy::die() {
@@ -307,6 +324,9 @@ void Enemy::hit() {
     this->healthPoints--;
     if (this->healthPoints <= 0) {
         this->die();
+    }
+    if (this->type != Enemy::TYPES::boss) {
+        this->hitSound.play();
     }
 }
 

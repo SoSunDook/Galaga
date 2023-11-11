@@ -4,8 +4,6 @@
 
 #ifndef GALAGA_LEVEL_H
 #define GALAGA_LEVEL_H
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
 #include "Player.h"
 #include "PlayerBullet.h"
 #include "EnemyBullet.h"
@@ -32,6 +30,7 @@ private:
     std::shared_ptr<sf::Time> deltaTime;
     std::shared_ptr<std::filesystem::path> dir_path;
     std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> textureManager;
+    std::shared_ptr<std::map<std::string, std::shared_ptr<sf::SoundBuffer>>> soundManager;
     std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> pathManager;
     std::shared_ptr<sf::Font> font;
     std::shared_ptr<Highscore> highScoreObj;
@@ -41,6 +40,10 @@ private:
     std::unique_ptr<UI> ui;
 
     std::unique_ptr<Label> midLabel;
+
+    sf::Sound startSound;
+    sf::Sound stageSound;
+    sf::Sound playerShootSound;
 
     std::unique_ptr<Background> background;
 
@@ -133,6 +136,8 @@ private:
     bool players;
     std::shared_ptr<bool> currentPlayer;
 
+    float overallVolume;
+
     void initConstants();
     void initScoreStage();
     void initCurrentPlayer();
@@ -143,6 +148,7 @@ private:
     void initMidLabel();
     void initUI();
     void initBackground();
+    void initSounds();
     std::shared_ptr<PlayerBullet> initNewPlBullet();
     std::shared_ptr<EnemyBullet> initNewEnBullet();
 
@@ -166,6 +172,7 @@ private:
 public:
     explicit Level(std::shared_ptr<std::filesystem::path> & dirPath,
                    std::shared_ptr<std::map<std::string, std::shared_ptr<sf::Texture>>> & textures,
+                   std::shared_ptr<std::map<std::string, std::shared_ptr<sf::SoundBuffer>>> & sounds,
                    std::shared_ptr<std::map<std::string, std::shared_ptr<BezierPath>>> & pathManager,
                    std::shared_ptr<sf::Time> & timer,
                    std::shared_ptr<sf::RenderWindow> & window,
