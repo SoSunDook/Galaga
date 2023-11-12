@@ -4,10 +4,10 @@ project(Galaga)
 set(CMAKE_CXX_STANDARD 20)
 
 set(SFML_STATIC_LIBRARIES TRUE)
-set(SFML_DIR "C:/SFML/lib/cmake/SFML")
+set(SFML_DIR ${CMAKE_PREFIX_PATH})
 find_package(SFML 2.6.0 COMPONENTS graphics window audio system REQUIRED)
 
-include_directories(C:/SFML/include)
+include_directories(include)
 add_executable(Galaga main.cpp
         Game.cpp
         Player.cpp
