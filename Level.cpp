@@ -727,18 +727,15 @@ void Level::handleGameOver() {
     if (*(this->player->getHealth()) == 0) {
         if (this->capturedPlayer) {
             if (this->capturedPlayer->getCurrentState() == Enemy::STATES::dead) {
-                if (this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotInFormation ||
-                    this->capturedPlayer->getCapturedState() == CapturedPlayer::CAPTURED_STATES::bossShotWhileDiving) {
-                    if (this->gameOverTimer >= this->gameOverDelay) {
-                        this->showMidLabel = {};
-                        this->currentState = STATES::gameOver;
-                    } else {
-                        if ("GAME OVER " + std::to_string(*(this->currentScore)) != this->midLabel->getText()) {
-                            this->midLabel->update("GAME OVER " + std::to_string(*(this->currentScore)));
-                        }
-                        this->gameOverTimer += this->deltaTime->asSeconds();
-                        this->showMidLabel = true;
+                if (this->gameOverTimer >= this->gameOverDelay) {
+                    this->showMidLabel = {};
+                    this->currentState = STATES::gameOver;
+                } else {
+                    if ("GAME OVER " + std::to_string(*(this->currentScore)) != this->midLabel->getText()) {
+                        this->midLabel->update("GAME OVER " + std::to_string(*(this->currentScore)));
                     }
+                    this->gameOverTimer += this->deltaTime->asSeconds();
+                    this->showMidLabel = true;
                 }
             } else {
                 if (this->capturedPlayer->getCapturedState() != CapturedPlayer::CAPTURED_STATES::bossShotInFormation &&
